@@ -31,3 +31,5 @@ if __name__ == "__main__":
 	sparse_to_adjlist(net_usu, prefix + 'amz_usu_adjlists.pickle')
 	sparse_to_adjlist(net_uvu, prefix + 'amz_uvu_adjlists.pickle')
 	sparse_to_adjlist(amz_homo, prefix + 'amz_homo_adjlists.pickle')
+
+	print()

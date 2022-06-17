@@ -20,10 +20,10 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 parser = argparse.ArgumentParser()
 
 # dataset and model dependent args
-parser.add_argument('--data', type=str, default='yelp', help='The dataset name. [yelp, amazon]')
+parser.add_argument('--data', type=str, default='amazon', help='The dataset name. [yelp, amazon]')
 parser.add_argument('--model', type=str, default='CARE', help='The model name. [CARE, SAGE]')
 parser.add_argument('--inter', type=str, default='GNN', help='The inter-relation aggregator type. [Att, Weight, Mean, GNN]')
-parser.add_argument('--batch-size', type=int, default=1024, help='Batch size 1024 for yelp, 256 for amazon.')
+parser.add_argument('--batch-size', type=int, default=256, help='Batch size 1024 for yelp, 256 for amazon.')
 
 # hyper-parameters
 parser.add_argument('--lr', type=float, default=0.01, help='Initial learning rate.')
