@@ -1,0 +1,67 @@
+# SHOES DATASET (#1000000)
+
+Size of Dataset (1000000, 15)
+Genuine Count: 210926 (0.7834591269723353); Fraud Count: 58298 (0.2165408730276647); ratio: 3.6180657998559127:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bamazon", r"\bshoe"]]
+{\bamazon}: Keyword Count: 13239 (0.04917466496300479); Genuine Count: 10823 (0.040200725046801174); Fraud Count: 2416 (0.008973939916203608); ratio: 4.479718543046357:1
+{\bshoes?}: Keyword Count: 114656 (0.4258758505928149); Genuine Count: 93986 (0.3490996345050961); Fraud Count: 20670 (0.07677621608771877); ratio: 4.546976294146106:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bweight", r"\bheel", r"\barch", r"\bankle", r"\btoe", r"\bfeet", r"\bOutdoor"]]
+{\bweight}: Keyword Count: 5545 (0.020596232133836507); Genuine Count: 4785 (0.017773304014500935); Fraud Count: 760 (0.002822928119335572); ratio: 6.296052631578948:1
+{\bheel}: Keyword Count: 21362 (0.0793465664279559); Genuine Count: 18862 (0.07006061866698363); Fraud Count: 2500 (0.009285947760972276); ratio: 7.5448:1
+{\barch}: Keyword Count: 10732 (0.039862716548301785); Genuine Count: 9524 (0.03537574659019998); Fraud Count: 1208 (0.004486969958101804); ratio: 7.8841059602649:1
+{\bankle}: Keyword Count: 8619 (0.03201423350072802); Genuine Count: 7566 (0.028102992303806494); Fraud Count: 1053 (0.003911241196921523); ratio: 7.185185185185185:1
+{\btoe}: Keyword Count: 21888 (0.08130032983686447); Genuine Count: 18852 (0.07002347487593974); Fraud Count: 3036 (0.011276854960924731); ratio: 6.209486166007905:1
+{\bfeet}: Keyword Count: 41716 (0.1549490387186878); Genuine Count: 36187 (0.1344122366505215); Fraud Count: 5529 (0.020536802068166285); ratio: 6.544944836317598:1
+{\bOutdoor}: Keyword Count: 1824 (0.005687718083762875); Genuine Count: 1614 (0.005032882120171754); Fraud Count: 210 (0.0006548359635911204); ratio: 7.685714285714286:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bleather", r"\btextile", r"\brubber", r"\bsynthetic", r"\bfoam"]]
+{\bleather}: Keyword Count: 19402 (0.07206638338335364); Genuine Count: 17094 (0.06349359641042403); Fraud Count: 2308 (0.008572786972929606); ratio: 7.406412478336222:1
+{\btextile}: Keyword Count: 38 (0.0001411464059667786); Genuine Count: 36 (0.00013371764775800077); Fraud Count: 2 (7.428758208777821e-06); ratio: 18.0:1
+{\brubber}: Keyword Count: 4644 (0.0172495765607821); Genuine Count: 4102 (0.015236383086203311); Fraud Count: 542 (0.0020131934745787894); ratio: 7.568265682656826:1
+{\bsynthetic}: Keyword Count: 713 (0.002648352301429293); Genuine Count: 634 (0.002354916352182569); Fraud Count: 79 (0.0002934359492467239); ratio: 8.025316455696203:1
+{\bfoam}: Keyword Count: 1562 (0.005801860161055478); Genuine Count: 1380 (0.005125843164056696); Fraud Count: 182 (0.0006760169969987817); ratio: 7.582417582417582:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bprice", r"\bquality", r"\bcheap", r"\bexpensive"]]
+{\bprice}: Keyword Count: 24965 (0.09272947434106915); Genuine Count: 21000 (0.07800196119216712); Fraud Count: 3965 (0.014727513148902029); ratio: 5.296343001261034:1
+{\bquality}: Keyword Count: 25153 (0.09342777761269426); Genuine Count: 21238 (0.07888598341901168); Fraud Count: 3915 (0.014541794193682584); ratio: 5.424776500638569:1
+{\bcheap}: Keyword Count: 9440 (0.03506373874543131); Genuine Count: 7665 (0.028470715835141); Fraud Count: 1775 (0.006593022910290316); ratio: 4.31830985915493:1
+{\bexpensive}: Keyword Count: 4499 (0.016710991590645707); Genuine Count: 3805 (0.014133212492199804); Fraud Count: 694 (0.002577779098445904); ratio: 5.482708933717579:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bgood", r"\blove", r"\brecommend", r"\bgift", r"\bbeautiful", r"\bworth", r"\bcomfort"]]
+{\bgood}: Keyword Count: 41760 (0.1551124713992809); Genuine Count: 33586 (0.12475113660000595); Fraud Count: 8174 (0.030361334799274952); ratio: 4.1088818204061655:1
+{\blove}: Keyword Count: 68642 (0.2549624104834636); Genuine Count: 57302 (0.21284135143969335); Fraud Count: 11340 (0.04212105904377025); ratio: 5.053086419753086:1
+{\brecommend}: Keyword Count: 22447 (0.08337666775621787); Genuine Count: 19473 (0.07233010429976525); Fraud Count: 2974 (0.01104656345645262); ratio: 6.547747141896436:1
+{\bgift}: Keyword Count: 3903 (0.014497221644429917); Genuine Count: 2986 (0.011091136005705287); Fraud Count: 917 (0.0034060856387246306); ratio: 3.2562704471101416:1
+{\bbeautiful}: Keyword Count: 10397 (0.0386183995483315); Genuine Count: 8969 (0.03331426618726414); Fraud Count: 1428 (0.005304133361067364); ratio: 6.280812324929972:1
+{\bworth}: Keyword Count: 8486 (0.03152022107984429); Genuine Count: 7309 (0.027148396873978544); Fraud Count: 1177 (0.004371824205865748); ratio: 6.209855564995752:1
+{\bcomfort}: Keyword Count: 77552 (0.2880575283035688); Genuine Count: 67045 (0.2490305470537545); Fraud Count: 10507 (0.03902698124981428); ratio: 6.380984105834206:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bbad", r"\bworst", r"\bheavy", r"\bflaw", r"\bscratch", r"\bpoor", r"\bregret", r"\brefund", r'\buncomfort']]
+{\bbad}: Keyword Count: 7548 (0.028036133479927495); Genuine Count: 6076 (0.022568567438267018); Fraud Count: 1472 (0.005467566041660476); ratio: 4.127717391304348:1
+{\bworst}: Keyword Count: 838 (0.003112649689477907); Genuine Count: 590 (0.002191483671589457); Fraud Count: 248 (0.0009211660178884498); ratio: 2.379032258064516:1
+{\bheavy}: Keyword Count: 5196 (0.01929991382640478); Genuine Count: 4471 (0.016606988975722818); Fraud Count: 725 (0.00269292485068196); ratio: 6.166896551724138:1
+{\bflaw}: Keyword Count: 863 (0.00320550916708763); Genuine Count: 743 (0.0027597836745609605); Fraud Count: 120 (0.00044572549252666925); ratio: 6.191666666666666:1
+{\bscratch}: Keyword Count: 1622 (0.006024722907318813); Genuine Count: 1345 (0.004995839895403084); Fraud Count: 277 (0.0010288830119157281); ratio: 4.855595667870036:1
+{\bpoor}: Keyword Count: 2756 (0.010236828811695837); Genuine Count: 2241 (0.008323923572935548); Fraud Count: 515 (0.0019129052387602888); ratio: 4.351456310679612:1
+{\bregret}: Keyword Count: 1160 (0.004308679761091136); Genuine Count: 999 (0.0037106647252845215); Fraud Count: 161 (0.0005980150358066145); ratio: 6.204968944099379:1
+{\brefund}: Keyword Count: 1756 (0.006522449707306926); Genuine Count: 1270 (0.004717261462573916); Fraud Count: 486 (0.0018051882447330104); ratio: 2.6131687242798356:1
+{\buncomfort}: Keyword Count: 5808 (0.021573113838290792); Genuine Count: 4852 (0.018022167414494993); Fraud Count: 956 (0.0035509464237957985); ratio: 5.075313807531381:1
+
+
+_ = [keyword_helpful_count(x) for x in [r"\bNike", r"\bAdidas", r"\bPuma", r"\bTimberland", r"\bGucci", r"\bAsics", r"\bVans"]]
+{\bNike}: Keyword Count: 2138 (0.007941342525183491); Genuine Count: 1673 (0.006214156241642647); Fraud Count: 465 (0.0017271862835408433); ratio: 3.5978494623655912:1
+{\bAdidas}: Keyword Count: 982 (0.00364752028050991); Genuine Count: 747 (0.002774641190978516); Fraud Count: 235 (0.0008728790895313939); ratio: 3.178723404255319:1
+{\bPuma}: Keyword Count: 696 (0.0025852078566546816); Genuine Count: 519 (0.0019277627551778445); Fraud Count: 177 (0.0006574451014768371); ratio: 2.9322033898305087:1
+{\bTimberland}: Keyword Count: 945 (0.0035100882536475203); Genuine Count: 766 (0.002845214393961905); Fraud Count: 179 (0.000664873859685615); ratio: 4.279329608938547:1
+{\bGucci}: Keyword Count: 99 (0.00036772353133450214); Genuine Count: 79 (0.0002934359492467239); Fraud Count: 20 (7.428758208777821e-05); ratio: 3.95:1
+{\bAsics}: Keyword Count: 2022 (0.007510474549074377); Genuine Count: 1594 (0.005920720292395923); Fraud Count: 428 (0.0015897542566784535); ratio: 3.7242990654205608:1
+{\bVans}: Keyword Count: 234 (0.000869164710427005); Genuine Count: 173 (0.0006425875850592815); Fraud Count: 61 (0.00022657712536772352); ratio: 2.8360655737704916:1
+
+
+_ = [keyword_helpful_count(x) for x in [r"\bNew Balance", r"\bSkechers", r"\bReebok", r"\bUnder Armour"]]
+{\bNew Balance}: Keyword Count: 2574 (0.009560811814697055); Genuine Count: 2143 (0.007959914420705434); Fraud Count: 431 (0.0016008973939916204); ratio: 4.972157772621809:1
+{\bSkechers}: Keyword Count: 1311 (0.004869551005853861); Genuine Count: 1092 (0.00405610198199269); Fraud Count: 219 (0.0008134490238611713); ratio: 4.986301369863014:1
+{\bReebok}: Keyword Count: 667 (0.0024774908626274033); Genuine Count: 537 (0.001994621579056845); Fraud Count: 130 (0.00048286928357055834); ratio: 4.130769230769231:1
+{\bUnder Armour}: Keyword Count: 81 (0.00030086470745550176); Genuine Count: 63 (0.00023400588357650135); Fraud Count: 18 (6.685882387900038e-05); ratio: 3.5:1

@@ -1,0 +1,84 @@
+# WATCH DATASET (#960872)
+
+# Size of Dataset (960872, 15)
+# Genuine Count: 247142 (0.2572059545912463); Fraud Count: 73549 (0.07654401418711337); ratio: 3.360236033120777:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bamazon", r"\bbatter", r"\bweight", r"\bwrist", r"\bhand", r"\bwatch"]]
+{\bamazon}: Keyword Count: 25505 (0.07953138691138822); Genuine Count: 21364 (0.06661864536266998); Fraud Count: 4141 (0.012912741548718236); ratio: 5.15914030427433:1
+{\bbatter}: Keyword Count: 24309 (0.07580194018541213); Genuine Count: 21014 (0.06552725209001811); Fraud Count: 3295 (0.01027468809539401); ratio: 6.377541729893778:1
+{\bweight}: Keyword Count: 11246 (0.035068024983551147); Genuine Count: 9943 (0.031004923742792907); Fraud Count: 1303 (0.0040631012407582375); ratio: 7.6308518802762855:1
+{\bwrist}: Keyword Count: 46357 (0.14455347982949318); Genuine Count: 40494 (0.12627108337932777); Fraud Count: 5863 (0.018282396450165425); ratio: 6.906703053044517:1
+{\bhand}: Keyword Count: 34188 (0.1066072948726344); Genuine Count: 29914 (0.09327982388030846); Fraud Count: 4274 (0.013327470992325946); ratio: 6.999064108563407:1
+{\bwatch}: Keyword Count: 240424 (0.7497061033830074); Genuine Count: 196451 (0.61258657087352); Fraud Count: 43973 (0.13711953250948733); ratio: 4.467536897641735:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bsteel", r"\bmaterial", r"\bplastic", r"\bcrystal", r"\bglass", r"\bquartz", r"\bmineral", r"\bleather"]]
+{\bsteel}: Keyword Count: 8079 (0.02519247499929839); Genuine Count: 7307 (0.0227851732664777); Fraud Count: 772 (0.00240730173282069); ratio: 9.465025906735752:1
+{\bmaterial}: Keyword Count: 5252 (0.016377135622764594); Genuine Count: 4514 (0.014075854950715798); Fraud Count: 738 (0.002301280672048795); ratio: 6.116531165311653:1
+{\bplastic}: Keyword Count: 8859 (0.02762472286406541); Genuine Count: 7681 (0.023951404934968553); Fraud Count: 1178 (0.0036733179290968565); ratio: 6.520373514431239:1
+{\bcrystal}: Keyword Count: 10424 (0.0325048099260659); Genuine Count: 9582 (0.029879229538714837); Fraud Count: 842 (0.0026255803873510637); ratio: 11.380047505938242:1
+{\bglass}: Keyword Count: 7456 (0.023249794973978066); Genuine Count: 6553 (0.02043400033053625); Fraud Count: 903 (0.002815794643441818); ratio: 7.256921373200443:1
+{\bquartz}: Keyword Count: 4497 (0.01402284442032985); Genuine Count: 4043 (0.012607151432375714); Fraud Count: 454 (0.0014156929879541365); ratio: 8.905286343612335:1
+{\bmineral}: Keyword Count: 1540 (0.004802130399668217); Genuine Count: 1431 (0.004462239351899492); Fraud Count: 109 (0.0003398910477687244); ratio: 13.128440366972477:1
+{\bleather}: Keyword Count: 14593 (0.04550486293659629); Genuine Count: 12908 (0.04025058389540087); Fraud Count: 1685 (0.005254279041195418); ratio: 7.66053412462908:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bprice", r"\bquality"]]
+{\bprice}: Keyword Count: 53304 (0.1662160771583861); Genuine Count: 45624 (0.14226779048991084); Fraud Count: 7680 (0.02394828666847526); ratio: 5.940625:1
+{\bquality}: Keyword Count: 36867 (0.11496113080816113); Genuine Count: 31378 (0.09784496602648655); Fraud Count: 5489 (0.017116164781674572); ratio: 5.716523957004919:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bgood", r"\blove", r"\brecommend", r"\bgift", r"\bbeautiful", r"\bworth", r"\bcomfort"]]
+{\bgood}: Keyword Count: 62437 (0.19469520504161328); Genuine Count: 50007 (0.15593515253000553); Fraud Count: 12430 (0.038760052511607745); ratio: 4.023089300080451:1
+{\blove}: Keyword Count: 72668 (0.226598189534474); Genuine Count: 61263 (0.19103436017848957); Fraud Count: 11405 (0.03556382935598442); ratio: 5.37159140727751:1
+{\brecommend}: Keyword Count: 27195 (0.0848012572850501); Genuine Count: 23465 (0.07317012326507448); Fraud Count: 3730 (0.011631134019975614); ratio: 6.29088471849866:1
+{\bgift}: Keyword Count: 20524 (0.0639993015083055); Genuine Count: 16323 (0.0508994639699898); Fraud Count: 4201 (0.013099837538315699); ratio: 3.8855034515591527:1
+{\bbeautiful}: Keyword Count: 28701 (0.08949736662394642); Genuine Count: 24586 (0.07666570000405375); Fraud Count: 4115 (0.012831666619892669); ratio: 5.974726609963548:1
+{\bworth}: Keyword Count: 12985 (0.04049069041538428); Genuine Count: 10902 (0.033995341309859026); Fraud Count: 2083 (0.006495349105525256); ratio: 5.233797407585214:1
+{\bcomfort}: Keyword Count: 19019 (0.059306310435902475); Genuine Count: 17143 (0.053456442494488464); Fraud Count: 1876 (0.005849867941414009); ratio: 9.138059701492537:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bbad", r"\bworst", r"\bheavy", r"\bflaw", r"\bscratch", r"\bpoor", r"\bregret", r"\brefund", r"\buncomfort"]]
+{\bbad}: Keyword Count: 9471 (0.02953310195795953); Genuine Count: 7494 (0.023368289100723125); Fraud Count: 1977 (0.0061648128572364055); ratio: 3.7905918057663124:1
+{\bworst}: Keyword Count: 1137 (0.0035454690028719235); Genuine Count: 846 (0.002638053453324228); Fraud Count: 291 (0.0009074155495476954); ratio: 2.9072164948453607:1
+{\bheavy}: Keyword Count: 15038 (0.0468924915261108); Genuine Count: 12775 (0.03983585445179316); Fraud Count: 2263 (0.007056637074317645); ratio: 5.645161290322581:1
+{\bflaw}: Keyword Count: 3106 (0.009685335728162001); Genuine Count: 2800 (0.00873114618121494); Fraud Count: 306 (0.0009541895469470611); ratio: 9.15032679738562:1
+{\bscratch}: Keyword Count: 12141 (0.03785887349504664); Genuine Count: 10788 (0.033639858929623845); Fraud Count: 1353 (0.00421901456542279); ratio: 7.9733924611973395:1
+{\bpoor}: Keyword Count: 4636 (0.014456283462897306); Genuine Count: 3729 (0.011628015753482324); Fraud Count: 907 (0.002828267709414982); ratio: 4.11135611907387:1
+{\bregret}: Keyword Count: 2032 (0.0063363175143674125); Genuine Count: 1769 (0.005516213426631867); Fraud Count: 263 (0.000820104087735546); ratio: 6.726235741444867:1
+{\brefund}: Keyword Count: 2948 (0.009192649622222014); Genuine Count: 2168 (0.0067604017574549955); Fraud Count: 780 (0.0024322478647670186); ratio: 2.7794871794871794:1
+{\buncomfort}: Keyword Count: 1945 (0.0060650283294510915); Genuine Count: 1600 (0.00498922638926568); Fraud Count: 345 (0.001075801940185412); ratio: 4.63768115942029:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bPiaget", r"\bCartier", r"\bBlancpain", r"\bTudor", r"\bSeiko", r"\bOmega", r"\bRolex"]]
+{\bPiaget}: Keyword Count: 20 (6.2365329865821e-05); Genuine Count: 18 (5.6128796879238894e-05); Fraud Count: 2 (6.236532986582099e-06); ratio: 9.0:1
+{\bCartier}: Keyword Count: 377 (0.0011755864679707257); Genuine Count: 340 (0.0010602106077189568); Fraud Count: 37 (0.00011537586025176884); ratio: 9.18918918918919:1
+{\bBlancpain}: Keyword Count: 43 (0.00013408545921151513); Genuine Count: 39 (0.00012161239323835094); Fraud Count: 4 (1.2473065973164198e-05); ratio: 9.75:1
+{\bTudor}: Keyword Count: 38 (0.00011849412674505989); Genuine Count: 36 (0.00011225759375847779); Fraud Count: 2 (6.236532986582099e-06); ratio: 18.0:1
+{\bSeiko}: Keyword Count: 10873 (0.033904911581553586); Genuine Count: 9400 (0.029311705036935868); Fraud Count: 1473 (0.004593206544617716); ratio: 6.381534283774609:1
+{\bOmega}: Keyword Count: 2219 (0.006919433348612839); Genuine Count: 2016 (0.006286425250474756); Fraud Count: 203 (0.0006330080981380831); ratio: 9.931034482758621:1
+{\bRolex}: Keyword Count: 4724 (0.014730690914306918); Genuine Count: 4119 (0.012844139685865834); Fraud Count: 605 (0.001886551228441085); ratio: 6.808264462809917:1
+
+_ = [keyword_helpful_count(x) for x in [r"\bCasio", r"\bRavel", r"\bTimex", r"\bGarmin"]]
+{\bCasio}: Keyword Count: 10098 (0.03148825504925302); Genuine Count: 8515 (0.026552039190373286); Fraud Count: 1583 (0.004936215858879732); ratio: 5.379027163613392:1
+{\bRavel}: Keyword Count: 9 (2.8064398439619447e-05); Genuine Count: 7 (2.1827865453037346e-05); Fraud Count: 2 (6.236532986582099e-06); ratio: 3.5:1
+{\bTimex}: Keyword Count: 8658 (0.026997951298913907); Genuine Count: 7472 (0.023299687237870723); Fraud Count: 1186 (0.003698264061043185); ratio: 6.300168634064081:1
+{\bGarmin}: Keyword Count: 143 (0.0004459121085406201); Genuine Count: 120 (0.00037419197919492594); Fraud Count: 23 (7.172012934569415e-05); ratio: 5.217391304347826:1
+
+# WATCH DATASET (#1000)
+Size of Dataset (1000, 15)
+Genuine Count: 259 (0.259); Fraud Count: 75 (0.075); ratio: 3.453333333333333:1
+
+# _ = [keyword_helpful_count(x) for x in [r"\bamazon", r"\bbatter", r"\bsteel", r"\bmaterial", r"\bweight", r"\bwrist", r"\bhand"]]
+# {amazon}: Keyword Count: 59 (0.059); Genuine Count: 28 (0.028); Fraud Count: 5 (0.005); ratio: 5.6:1
+# {batter}: Keyword Count: 60 (0.06); Genuine Count: 28 (0.028); Fraud Count: 1 (0.001); ratio: 28.0:1
+# {steel}: Keyword Count: 18 (0.018); Genuine Count: 8 (0.008); Fraud Count: 2 (0.002); ratio: 4.0:1
+# {material}: Keyword Count: 11 (0.011); Genuine Count: 9 (0.009); Fraud Count: 1 (0.001); ratio: 9.0:1
+# {weight}: Keyword Count: 36 (0.036); Genuine Count: 14 (0.014); Fraud Count: 3 (0.003); ratio: 4.666666666666667:1
+# {wrist}: Keyword Count: 88 (0.088); Genuine Count: 37 (0.037); Fraud Count: 4 (0.004); ratio: 9.25:1
+# {hand}: Keyword Count: 90 (0.09); Genuine Count: 39 (0.039); Fraud Count: 11 (0.011); ratio: 3.5454545454545454:1
+
+# _ = [keyword_helpful_count(x) for x in [r"\bprice", r"\bquality"]]
+# {price}: Keyword Count: 131 (0.131); Genuine Count: 43 (0.043); Fraud Count: 12 (0.012); ratio: 3.5833333333333335:1
+# {quality}: Keyword Count: 91 (0.091); Genuine Count: 33 (0.033); Fraud Count: 9 (0.009); ratio: 3.6666666666666665:1
+
+# _ = [keyword_helpful_count(x) for x in [r"\bgood", r"\blove", r"\bwatch", r"\brecommend"]]
+# {good}: Keyword Count: 195 (0.195); Genuine Count: 49 (0.049); Fraud Count: 14 (0.014); ratio: 3.5:1
+# {love}: Keyword Count: 212 (0.212); Genuine Count: 71 (0.071); Fraud Count: 14 (0.014); ratio: 5.071428571428571:1
+# {watch}: Keyword Count: 648 (0.648); Genuine Count: 210 (0.21); Fraud Count: 45 (0.045); ratio: 4.666666666666667:1
+# {recommend}: Keyword Count: 71 (0.071); Genuine Count: 20 (0.02); Fraud Count: 2 (0.002); ratio: 10.0:1
