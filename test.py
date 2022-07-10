@@ -1,4 +1,3 @@
-import tensorflow as tf
 import tensorflow_datasets as tfds
 import pandas as pd
 import spacy
@@ -8,13 +7,11 @@ from collections import Counter
 from gensim.models import Word2Vec, KeyedVectors
 import gensim.downloader as api
 from datetime import datetime
-import nltk
-from nltk.corpus import stopwords, wordnet
-from nltk.stem import WordNetLemmatizer
+from nltk.corpus import wordnet
 
 DATASET = "Watches_v1_00"
 # DATASET = "Shoes_v1_00"
-DATASET_SIZE = -1
+DATASET_SIZE = 5000
 
 GENUINE_THRESHOLD = 0.7
 FRAUDULENT_THRESHOLD = 0.3
@@ -92,6 +89,10 @@ def save_word_2_vec_model(model, name=MODEL_NAME):
     model.save(name)
 
 def preprocess(col) -> pd.Series:
+    import nltk
+    from nltk.corpus import stopwords, wordnet
+    from nltk.stem import WordNetLemmatizer
+
     lemmatizer = WordNetLemmatizer()
     words_to_remove = set(stopwords.words('english'))
     words_to_remove.add('')
@@ -145,7 +146,9 @@ def load_dataset():
         df = df.rename({col: col.replace('data/', '') for col in df.columns}, axis=1)
 
         tprint('Decoding...')
-        df['review_body'] = df['review_body'].str.decode('utf-8')
+        for column in df.columns:
+            if df[column].dtype == 'O':
+                df[column] = df[column].str.decode('utf-8')
 
         tprint('Preprocessing Words...')
         df['words'] = preprocess(df["review_body"])
@@ -160,7 +163,7 @@ def load_dataset():
         df.loc[fraud, 'genuine'] = 0
 
         try:
-            df.to_csv(f"df_{DATASET}_size_{DATASET_SIZE}")
+            df.to_csv(f"df_{DATASET}_size_{DATASET_SIZE}", index=False)
             tprint("Successfully saved DataFrame")
         except:
             tprint("Failed to save DataFrame")
@@ -175,10 +178,19 @@ def load_dataset():
 
     return df, target_df, genuine_ratio
 
+def build_user_features(df):
+    df_by_user = df.groupby('customer_id', sort=False)
+    for column in ['MNR', 'PR', 'NR', 'avgRD', 'WRD', 'BST', 'ERD', 'ETG', 'RL', 'ACS', 'MCS']:
+        df[column] = np.nan
+    MNR = {}
+    for customer_id, user_df in df_by_user.__iter__():
+        MNR[customer_id] = user_df.groupby('review_date')['review_id'].count().max()
+
+    df['MNR'] = df['customer_id'].apply(lambda cusomter_id: MNR[customer_id])
 
 if __name__ == '__main__':
     df, target_df, genuine_ratio = load_dataset()
-    print(important_keywords(df, genuine_ratio*3))
+    print(important_keywords(df, genuine_ratio * 3))
     model = train_word_2_vec_model()
     save_word_2_vec_model(model)
     tprint('end')
