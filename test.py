@@ -3,6 +3,7 @@ import pandas as pd
 import spacy
 import numpy as np
 from numpy import linalg as LA
+from scipy import sparse
 import gensim
 from collections import Counter
 from gensim.models import Word2Vec, KeyedVectors
@@ -13,7 +14,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 DATASET = "Watches_v1_00"
 # DATASET = "Shoes_v1_00"
-DATASET_SIZE = -1
+DATASET_SIZE = 5000
 DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
 
@@ -57,23 +58,6 @@ def train_word_2_vec_model() -> Word2Vec:
 def save_word_2_vec_model(model, name=MODEL_NAME):
     tprint(f'Saving Word2Vec Model as {name}...')
     model.save(name)
-
-def preprocess(col) -> pd.Series:
-    import nltk
-    from nltk.corpus import stopwords, wordnet
-    from nltk.stem import WordNetLemmatizer
-
-    lemmatizer = WordNetLemmatizer()
-    words_to_remove = set(stopwords.words('english'))
-    words_to_remove.add('')
-    word_split_column = col.str.lower().str.split(r"(?<=\w|-)[^\w-]+", regex=True)
-    return word_split_column.apply(
-        lambda sentence: [
-            lemmatizer.lemmatize(word, wordnet_tag(nltk_tag))
-            for word, nltk_tag in nltk.pos_tag(sentence)
-            if word not in words_to_remove and not word.isnumeric() and len(word) > 1
-        ]
-    ), word_split_column.str.len()
 
 def keyword_helpful_count(df, keyword, print=False):
     keyword_df = df.loc[df['processed_words_set'].apply(lambda words: keyword in words)]
@@ -126,7 +110,7 @@ def load_dataset():
                 df[column] = df[column].str.decode('utf-8')
 
         tprint('Preprocessing Words...')
-        df['processed_words'], df['word_count'] = preprocess(df["review_body"])
+        df['processed_words'], df['word_list'] = preprocess(df["review_body"])
 
         tprint('Creating Words Sets...')
         df['processed_words_set'] = df['processed_words'].apply(set)
@@ -159,6 +143,23 @@ def load_dataset():
 
 def normalize_column(col):
     return col/col.max()
+
+def preprocess(col) -> pd.Series:
+    import nltk
+    from nltk.corpus import stopwords, wordnet
+    from nltk.stem import WordNetLemmatizer
+
+    lemmatizer = WordNetLemmatizer()
+    words_to_remove = set(stopwords.words('english'))
+    words_to_remove.add('')
+    word_split_column = col.str.split(r"(?<=\w|-)[^\w-]+", regex=True)
+    return word_split_column.apply(
+        lambda sentence: [
+            lemmatizer.lemmatize(word, wordnet_tag(nltk_tag))
+            for word, nltk_tag in nltk.pos_tag([word.lower() for word in sentence])
+            if word not in words_to_remove and not word.isnumeric() and len(word) > 1
+        ]
+    ), word_split_column
 
 def process_behaviour_features(df, type='user', TFIDF=None, W=None):
     assert type in ('user', 'product')
@@ -205,17 +206,17 @@ def process_behaviour_features(df, type='user', TFIDF=None, W=None):
         MNR[id] = sub_df.groupby('review_date')['review_id'].count().max()
         PR[id] = sum(sub_df['star_rating'] > 3) / len(sub_df)
         NR[id] = sum(sub_df['star_rating'] < 3) / len(sub_df)
+        RL[id] = sub_df['word_list'].str.len().mean()
+        datetimes = sub_df['review_date'].sort_values()
+        if type == 'user':
+            delta_days = (datetimes.iloc[-1] - datetimes.iloc[0]).days
+            BST[id] = 0.0 if delta_days > BST_TAU else 1.0 - (delta_days / BST_TAU)
         RD = (sub_df['star_rating'] - sub_df['product_id'].apply(lambda product_id: product_avg_rating[product_id])).abs()
         avgRD[id] = RD.mean()
-
-        datetimes = sub_df['review_date'].sort_values()
-        delta_days = (datetimes.iloc[-1] - datetimes.iloc[0]).days
-
         w = W[sub_df.index]
         WRD[id] = np.dot(RD, w) / np.sum(w)
 
-        if type == 'user': BST[id] = 0.0 if delta_days > BST_TAU else 1.0 - (delta_days / BST_TAU)
-
+        ################################################
         # Code from SOURCE # ETG
         h, _ = np.histogram(sub_df['star_rating'], bins=np.arange(1, 7))
         h = (h[np.nonzero(h)]) / h.sum()
@@ -240,9 +241,6 @@ def process_behaviour_features(df, type='user', TFIDF=None, W=None):
         else:
             ETG[id] = 0
         ################################################
-        
-        RL[id] = sub_df['word_count'].mean()
-        
         # Code from SOURCE # ACS, MCS
         if len(sub_df) > 1:
             upT = TFIDF[sub_df.index,:]
@@ -280,22 +278,124 @@ def process_behaviour_features(df, type='user', TFIDF=None, W=None):
     
     return TFIDF, W # for reuse
 
+def process_review_behaviour_features(df):
+    DEV_BETA = 0.63
+    ETF_DELTA, ETF_BETA = 7 * 30, 0.69
+
+    int_dates = np.array([date.toordinal() for date in df['review_date']])
+    udates, ind_dates = np.unique(int_dates, return_inverse=True)
+    uuser, ind_users = np.unique(df['customer_id'], return_inverse=True)
+    uprod, ind_prods = np.unique(df['product_id'], return_inverse=True)
+    ratings = df['star_rating'].to_numpy()
+
+    ################################################
+    tprint('Computing RANK...')
+    Rank = np.zeros((len(df),))
+    for i in range(len(uprod)):
+        ind = ind_prods==i
+        if any(ind):
+            d = ind_dates[ind]
+            if len(d)>1:
+                ud = np.unique(d)
+                f, edges = np.histogram(d, bins=np.append(ud,ud.max()+1))
+                m, r = 0, np.zeros((len(d),))
+                for j in range(len(ud)):
+                    r[d==ud[j]] = m + 1
+                    m += f[j]
+                Rank[ind] = r
+            else:
+                r = 1
+                Rank[ind] = r
+    ################################################
+    tprint('Computing RD...')
+    avgRating = np.zeros((len(df),))
+    for i in range(len(uprod)):
+        ind = ind_prods==i
+        r = ratings[ind]
+        avgRating[ind_prods==i] = np.sum(r)/len(r)
+    RD = np.fabs(ratings - avgRating)
+    ################################################
+    tprint('Computing EXT...')
+    EXT = np.zeros((len(ratings),))
+    EXT[np.logical_or(ratings == 5,ratings == 1)] = 1
+    ################################################
+    tprint('Computing DEV...')
+    DEV = np.zeros((len(ratings),))
+    normRD = RD/4
+    DEV[normRD > DEV_BETA] = 1
+    ################################################
+    tprint('Computing ETF...')
+    HRMat = sparse.csr_matrix((np.ones((len(ind_prods))), (ind_prods, ind_users)), shape=(len(uprod), len(uuser)))
+    x, y = HRMat.nonzero()
+    firstReviewDate = []
+    for i in range(len(uprod)):
+        ind = ind_prods == i
+        d = int_dates[ind]
+        firstReviewDate.append(d.min())
+    F, ETF = np.zeros((len(ind_prods),)), np.zeros((len(ind_prods),))
+    for i in range(len(x)):
+        ind = np.logical_and(ind_prods == x[i], ind_users == y[i])
+        d = int_dates[ind]
+        deltaD = d.max() - firstReviewDate[x[i]]
+        if deltaD <= ETF_DELTA:
+            F[ind] = 1 - deltaD / ETF_DELTA
+    ETF[F > ETF_BETA] = 1
+    ################################################
+    tprint('Computing ISR...')
+    ISR = np.zeros((len(df),))
+    for i in range(len(df)):
+        ind = ind_users == i
+        if np.sum(ind) == 1:
+            ISR[ind] = 1
+
+    df['f_RANK'] = pd.Series(Rank)
+    df['f_RD'] = pd.Series(RD)
+    df['f_EXT'] = pd.Series(EXT)
+    df['f_DEV'] = pd.Series(DEV)
+    df['f_ETF'] = pd.Series(ETF)
+    df['f_ISR'] = pd.Series(ISR)
+
+def process_review_text_features(df):
+    ################################################
+    tprint('Computing PCW...')
+
+    # df['f_PCW'] = pd.Series(PCW)
+    # df['f_PC'] = pd.Series(PC)
+    # df['f_L'] = pd.Series(L)
+    # df['f_PP1'] = pd.Series(PP1)
+    # df['f_RES'] = pd.Series(RES)
+    # df['f_DL_u'] = pd.Series(DL_u)
+    # df['f_DL_b'] = pd.Series(DL_b)
+
 def process_features(df):
     tprint('Processing Features...')
+    updated = False
     TFIDF, W = None, None
     if not len([1 for col in df.columns if 'f_user' in col]) == 11:
         tprint('Processing User Features...')
         TFIDF, W = process_behaviour_features(df, type='user')
-    if not len([1 for col in df.columns if 'f_type' in col]) == 10:
+        updated = True
+    if not len([1 for col in df.columns if 'f_product' in col]) == 10:
         tprint('Processing Product Features...')
         TFIDF, W = process_behaviour_features(df, type='product', TFIDF=TFIDF, W=W)
+        updated = True
     del TFIDF, W
+    if not all([col in df.columns for col in ['f_RANK', 'f_RD', 'f_EXT', 'f_DEV', 'f_ETF', 'f_ISR']]):
+        tprint('Processing Review Behaviour Features...')
+        process_review_behaviour_features(df)
+        updated = True
+    if not all([col in df.columns for col in ['f_PCW', 'f_PC', 'f_L', 'f_PP1', 'f_RES', 'f_DL_u', 'f_DL_b']]):
+        tprint('Processing Review Behaviour Features...')
+        process_review_text_features(df)
+        updated = True
 
-    try:
-        df.to_pickle(DF_FILE_NAME_WITH_FEATURES, compression={"method": "gzip", "compresslevel": 1})
-        tprint("Successfully saved DataFrame")
-    except:
-        tprint("Failed to save DataFrame")
+    tprint('Finished all features')
+    if updated:
+        try:
+            df.to_pickle(DF_FILE_NAME_WITH_FEATURES, compression={"method": "gzip", "compresslevel": 1})
+            tprint("Successfully saved DataFrame")
+        except:
+            tprint("Failed to save DataFrame")
 
 if __name__ == '__main__':
     df, target_df, genuine_ratio = load_dataset()
