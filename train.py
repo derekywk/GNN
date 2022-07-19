@@ -9,6 +9,10 @@ from model import *
 from layers import *
 from graphsage import *
 
+import pandas as pd
+from utils import tprint
+from collections import defaultdict
+
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 """
@@ -17,10 +21,23 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 	Source: https://github.com/YingtongDou/CARE-GNN
 """
 
+DATASET = "Watches_v1_00"
+# DATASET = "Shoes_v1_00"
+DATASET_SIZE = 5000 # -1 refers to whole dataset
+USING_GIST_AS = [None, 'feature', 'relation'][1]
+DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
+DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
+
+GENUINE_THRESHOLD = 0.7
+FRAUDULENT_THRESHOLD = 0.3
+
+WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{DATASET_SIZE}"
+df = pd.read_pickle(DF_FILE_NAME_WITH_FEATURES, compression={"method": "gzip", "compresslevel": 1})
+
 parser = argparse.ArgumentParser()
 
 # dataset and model dependent args
-parser.add_argument('--data', type=str, default='amazon', help='The dataset name. [yelp, amazon]')
+parser.add_argument('--data', type=str, default='yelp', help='The dataset name. [yelp, amazon]')
 parser.add_argument('--model', type=str, default='CARE', help='The model name. [CARE, SAGE]')
 parser.add_argument('--inter', type=str, default='GNN', help='The inter-relation aggregator type. [Att, Weight, Mean, GNN]')
 parser.add_argument('--batch-size', type=int, default=256, help='Batch size 1024 for yelp, 256 for amazon.')
@@ -42,23 +59,70 @@ parser.add_argument('--seed', type=int, default=72, help='Random seed.')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
-print(f'run on {args.data}')
+print(f'run on {args.data}; USING_GIST_AS {USING_GIST_AS}')
 
 # load graph, feature, and label
-[homo, relation1, relation2, relation3], feat_data, labels = load_data(args.data)
+if args.data in ['amazon', 'yelp']:
+	[homo, relation1, relation2, relation3], feat_data, labels = load_data(args.data)
+	tprint(f"Feature size", feat_data.shape)
+else:
+	feature_list = ['f_user_MNR',
+		   'f_user_PR', 'f_user_NR', 'f_user_avgRD', 'f_user_WRD', 'f_user_BST',
+		   'f_user_ERD', 'f_user_ETG', 'f_user_RL', 'f_user_ACS', 'f_user_MCS',
+		   'f_product_MNR', 'f_product_PR', 'f_product_NR', 'f_product_avgRD',
+		   'f_product_WRD', 'f_product_ERD', 'f_product_ETG', 'f_product_RL',
+		   'f_product_ACS', 'f_product_MCS', 'f_RANK', 'f_RD', 'f_EXT', 'f_DEV',
+		   'f_ETF', 'f_ISR', 'f_L', 'f_PC', 'f_PCW', 'f_PP1', 'f_RES',
+		   'f_SW', 'f_OW']
+	if USING_GIST_AS == 'feature':
+		feature_list.extend([col for col in df.columns if 'f_gist_' in col])
+
+	target_df_indices = ~pd.isna(df['genuine'])
+	feat_data = df.loc[target_df_indices, feature_list].to_numpy(dtype=float)
+	labels = (1 - df.loc[target_df_indices, 'genuine']).to_numpy(dtype=float)
+	tprint(f"Feature size", feat_data.shape)
+
+	tprint('Computing RUR...')
+	customer_id_to_index_list = defaultdict(list)
+	relation_RUR = defaultdict(set)
+	for idx, customer_id in enumerate(df.loc[target_df_indices, 'customer_id'].to_list()):
+		customer_id_to_index_list[customer_id].append(idx)
+	for index_list in customer_id_to_index_list.values():
+		s = set(index_list)
+		for index in index_list:
+			relation_RUR[index] = s
+	tprint('Computing RSR...')
+	pisr_to_index_list = defaultdict(list)
+	relation_RSR = defaultdict(set)
+	for idx, (product_id, star_rating) in enumerate(df.loc[target_df_indices, ['product_id', 'star_rating']].itertuples(index=False, name=None)):
+		pisr_to_index_list[(product_id, star_rating)].append(idx)
+	for index_list in pisr_to_index_list.values():
+		s = set(index_list)
+		for index in index_list:
+			relation_RSR[index] = s
+	tprint('Computing RTR...')
+	piym_to_index_list = defaultdict(list)
+	relation_RTR = defaultdict(set)
+	for idx, (product_id, review_date) in enumerate(df.loc[target_df_indices, ['product_id', 'review_date']].itertuples(index=False, name=None)):
+		piym_to_index_list[(product_id, review_date.year, review_date.month)].append(idx)
+	for index_list in piym_to_index_list.values():
+		s = set(index_list)
+		for index in index_list:
+			relation_RTR[index] = s
+	relation1, relation2, relation3 = relation_RUR, relation_RSR, relation_RTR
 
 # train_test split
 np.random.seed(args.seed)
 random.seed(args.seed)
-if args.data == 'yelp':
+if args.data == 'amazon':  # amazon
+	# 0-3304 are unlabeled nodes
+	index = list(range(3305, len(labels)))
+	idx_train, idx_test, y_train, y_test = train_test_split(index, labels[3305:], stratify=labels[3305:],test_size=0.60,
+															random_state=2, shuffle=True)
+else:
 	index = list(range(len(labels)))
 	idx_train, idx_test, y_train, y_test = train_test_split(index, labels, stratify=labels, test_size=0.60,
 															random_state=2, shuffle=True)
-elif args.data == 'amazon':  # amazon
-	# 0-3304 are unlabeled nodes
-	index = list(range(3305, len(labels)))
-	idx_train, idx_test, y_train, y_test = train_test_split(index, labels[3305:], stratify=labels[3305:],
-															test_size=0.60, random_state=2, shuffle=True)
 
 # split pos neg sets for under-sampling
 train_pos, train_neg = pos_neg_split(idx_train, y_train)

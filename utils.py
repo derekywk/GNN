@@ -6,6 +6,7 @@ from scipy.io import loadmat
 import copy as cp
 from sklearn.metrics import f1_score, accuracy_score, recall_score, roc_auc_score, average_precision_score
 from collections import defaultdict
+from datetime import datetime
 
 
 """
@@ -211,3 +212,6 @@ def test_care(test_cases, labels, model, batch_size):
 	print(f"Label1 ap: {ap_label1:.4f}")
 
 	return auc_gnn, auc_label1, recall_gnn, recall_label1
+
+def tprint(*args):
+    print(datetime.now(), *args)
