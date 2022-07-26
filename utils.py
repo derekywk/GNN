@@ -200,18 +200,18 @@ def test_care(test_cases, labels, model, batch_size):
 	ap_gnn = average_precision_score(labels, np.array(gnn_list))
 	auc_label1 = roc_auc_score(labels, np.array(label_list1))
 	ap_label1 = average_precision_score(labels, np.array(label_list1))
-	print(f"GNN F1: {f1_gnn / test_batch_num:.4f}")
-	print(f"GNN Accuracy: {acc_gnn / test_batch_num:.4f}")
-	print(f"GNN Recall: {recall_gnn / test_batch_num:.4f}")
-	print(f"GNN auc: {auc_gnn:.4f}")
-	print(f"GNN ap: {ap_gnn:.4f}")
-	print(f"Label1 F1: {f1_label1 / test_batch_num:.4f}")
-	print(f"Label1 Accuracy: {acc_label1 / test_batch_num:.4f}")
-	print(f"Label1 Recall: {recall_label1 / test_batch_num:.4f}")
-	print(f"Label1 auc: {auc_label1:.4f}")
-	print(f"Label1 ap: {ap_label1:.4f}")
+	print(f"GNN F1\t{f1_gnn / test_batch_num:.4f}")
+	print(f"GNN Accuracy\t{acc_gnn / test_batch_num:.4f}")
+	print(f"GNN Recall\t{recall_gnn / test_batch_num:.4f}")
+	print(f"GNN auc\t{auc_gnn:.4f}")
+	print(f"GNN ap\t{ap_gnn:.4f}")
+	print(f"Label1 F1\t{f1_label1 / test_batch_num:.4f}")
+	print(f"Label1 Accuracy\t{acc_label1 / test_batch_num:.4f}")
+	print(f"Label1 Recall\t{recall_label1 / test_batch_num:.4f}")
+	print(f"Label1 auc\t{auc_label1:.4f}")
+	print(f"Label1 ap\t{ap_label1:.4f}")
 
-	return auc_gnn, auc_label1, recall_gnn, recall_label1
+	return auc_gnn, auc_label1, recall_gnn / test_batch_num, recall_label1 / test_batch_num
 
 def tprint(*args):
     print(datetime.now(), *args)

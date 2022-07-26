@@ -1,195 +1,345 @@
 ################################################
-# 5000
-# 1st
-GNN F1	0.6411
-GNN Accuracy	0.7404
-GNN Recall	0.6562
-GNN auc	0.7190
-GNN ap	0.4789
-Label1 F1	0.6270
-Label1 Accuracy	0.7523
-Label1 Recall	0.6275
-Label1 auc	0.6937
-Label1 ap	0.4534
-# 2nd
-GNN F1	0.6521
-GNN Accuracy	0.7661
-GNN Recall	0.6546
-GNN auc	0.7232
-GNN ap	0.4855
-Label1 F1	0.6243
-Label1 Accuracy	0.7523
-Label1 Recall	0.6240
-Label1 auc	0.6942
-Label1 ap	0.4503
-# 3rd
-GNN F1	0.6414
-GNN Accuracy	0.7474
-GNN Recall	0.6519
-GNN auc	0.7194
-GNN ap	0.4771
-Label1 F1	0.6248
-Label1 Accuracy	0.7494
-Label1 Recall	0.6265
-Label1 auc	0.6973
-Label1 ap	0.4511
-# 4th
-GNN F1	0.6517
-GNN Accuracy	0.7721
-GNN Recall	0.6504
-GNN auc	0.7217
-GNN ap	0.4822
-Label1 F1	0.6167
-Label1 Accuracy	0.7375
-Label1 Recall	0.6215
-Label1 auc	0.6946
-Label1 ap	0.4477
-# 5th
-GNN F1	0.6562
-GNN Accuracy	0.7652
-GNN Recall	0.6621
-GNN auc	0.7263
-GNN ap	0.4899
-Label1 F1	0.6118
-Label1 Accuracy	0.7406
-Label1 Recall	0.6134
-Label1 auc	0.6954
-Label1 ap	0.4459
-################################################
 # yelp
 # 1st
-GNN F1	0.5744
-GNN Accuracy	0.6519
-GNN Recall	0.7061
-GNN auc	0.7775
-GNN ap	0.3945
-Label1 F1	0.5879
-Label1 Accuracy	0.6829
-Label1 Recall	0.6920
-Label1 auc	0.7531
-Label1 ap	0.3412
+GNN F1	0.5966
+GNN Accuracy	0.6875
+GNN Recall	0.7090
+GNN auc	0.7772
+GNN ap	0.3925
+Label1 F1	0.5945
+Label1 Accuracy	0.6943
+Label1 Recall	0.6919
+Label1 auc	0.7525
+Label1 ap	0.3405
 # 2nd
-GNN F1	0.5718
-GNN Accuracy	0.6475
-GNN Recall	0.7063
-GNN auc	0.7793
-GNN ap	0.3998
-Label1 F1	0.5880
-Label1 Accuracy	0.6830
-Label1 Recall	0.6920
-Label1 auc	0.7530
-Label1 ap	0.3410
-# 3rd
-GNN F1	0.5722
-GNN Accuracy	0.6491
-GNN Recall	0.7045
-GNN auc	0.7757
-GNN ap	0.3921
-Label1 F1	0.5882
-Label1 Accuracy	0.6835
-Label1 Recall	0.6917
-Label1 auc	0.7529
-Label1 ap	0.3409
-# 4th
-GNN F1	0.5750
-GNN Accuracy	0.6531
-GNN Recall	0.7057
-GNN auc	0.7776
-GNN ap	0.3966
-Label1 F1	0.5877
-Label1 Accuracy	0.6825
+GNN F1	0.6133
+GNN Accuracy	0.7172
+GNN Recall	0.7062
+GNN auc	0.7752
+GNN ap	0.3893
+Label1 F1	0.5821
+Label1 Accuracy	0.6727
 Label1 Recall	0.6921
-Label1 auc	0.7531
-Label1 ap	0.3413
+Label1 auc	0.7535
+Label1 ap	0.3421
+# 3rd
+GNN F1	0.5960
+GNN Accuracy	0.6857
+GNN Recall	0.7104
+GNN auc	0.7792
+GNN ap	0.3976
+Label1 F1	0.5920
+Label1 Accuracy	0.6898
+Label1 Recall	0.6922
+Label1 auc	0.7534
+Label1 ap	0.3422
+# 4th
+GNN F1	0.6042
+GNN Accuracy	0.7008
+GNN Recall	0.7082
+GNN auc	0.7787
+GNN ap	0.3962
+Label1 F1	0.5747
+Label1 Accuracy	0.6597
+Label1 Recall	0.6923
+Label1 auc	0.7543
+Label1 ap	0.3439
 # 5th
-GNN F1	0.5740
-GNN Accuracy	0.6505
-GNN Recall	0.7076
-GNN auc	0.7806
-GNN ap	0.4023
-Label1 F1	0.5878
-Label1 Accuracy	0.6829
-Label1 Recall	0.6916
-Label1 auc	0.7533
-Label1 ap	0.3415
+GNN F1	0.6452
+GNN Accuracy	0.7768
+GNN Recall	0.6969
+GNN auc	0.7818
+GNN ap	0.4013
+Label1 F1	0.5780
+Label1 Accuracy	0.6663
+Label1 Recall	0.6910
+Label1 auc	0.7531
+Label1 ap	0.3419
+################################################
+# 5000
+# 1st
+GNN F1	0.6393
+GNN Accuracy	0.7750
+GNN Recall	0.6331
+GNN auc	0.7163
+GNN ap	0.4716
+Label1 F1	0.6275
+Label1 Accuracy	0.7879
+Label1 Recall	0.6147
+Label1 auc	0.6938
+Label1 ap	0.4455
+# 2nd
+GNN F1	0.6493
+GNN Accuracy	0.7967
+GNN Recall	0.6345
+GNN auc	0.7188
+GNN ap	0.4750
+Label1 F1	0.6415
+Label1 Accuracy	0.8017
+Label1 Recall	0.6246
+Label1 auc	0.6975
+Label1 ap	0.4526
+# 3rd
+GNN F1	0.6472
+GNN Accuracy	0.8095
+GNN Recall	0.6273
+GNN auc	0.7141
+GNN ap	0.4699
+Label1 F1	0.6349
+Label1 Accuracy	0.7890
+Label1 Recall	0.6225
+Label1 auc	0.6936
+Label1 ap	0.4491
+# 4th
+GNN F1	0.6509
+GNN Accuracy	0.7957
+GNN Recall	0.6367
+GNN auc	0.7261
+GNN ap	0.4864
+Label1 F1	0.6177
+Label1 Accuracy	0.8095
+Label1 Recall	0.6013
+Label1 auc	0.6994
+Label1 ap	0.4532
+# 5th
+GNN F1	0.6454
+GNN Accuracy	0.7957
+GNN Recall	0.6310
+GNN auc	0.7184
+GNN ap	0.4824
+Label1 F1	0.6429
+Label1 Accuracy	0.8046
+Label1 Recall	0.6249
+Label1 auc	0.6952
+Label1 ap	0.4523
 ################################################
 # -1
-GNN F1	0.6119
-GNN Accuracy	0.6668
-GNN Recall	0.6577
-GNN auc	0.7190
-GNN ap	0.4541
-Label1 F1	0.5811
-Label1 Accuracy	0.6272
-Label1 Recall	0.6356
-Label1 auc	0.6937
+# 1st
+GNN F1	0.6200
+GNN Accuracy	0.6800
+GNN Recall	0.6598
+GNN auc	0.7208
+GNN ap	0.4549
+Label1 F1	0.5883
+Label1 Accuracy	0.6394
+Label1 Recall	0.6371
+Label1 auc	0.6940
+Label1 ap	0.4241
+# 2nd
+GNN F1	0.6125
+GNN Accuracy	0.6679
+GNN Recall	0.6576
+GNN auc	0.7195
+GNN ap	0.4514
+Label1 F1	0.5944
+Label1 Accuracy	0.6505
+Label1 Recall	0.6377
+Label1 auc	0.6939
 Label1 ap	0.4237
-################################################
-# random
-GNN F1	0.3960
-GNN Accuracy	0.4973
-GNN Recall	0.4987
-GNN auc	0.4867
-GNN ap	0.4924
-Label1 F1	0.4321
-Label1 Accuracy	0.4884
-Label1 Recall	0.4896
-Label1 auc	0.4869
-Label1 ap	0.4898
+# 3rd
+GNN F1	0.6181
+GNN Accuracy	0.6781
+GNN Recall	0.6578
+GNN auc	0.7188
+GNN ap	0.4558
+Label1 F1	0.6005
+Label1 Accuracy	0.6625
+Label1 Recall	0.6375
+Label1 auc	0.6934
+Label1 ap	0.4238
+# 4th
+GNN F1	0.6257
+GNN Accuracy	0.6953
+GNN Recall	0.6554
+GNN auc	0.7168
+GNN ap	0.4507
+Label1 F1	0.5975
+Label1 Accuracy	0.6561
+Label1 Recall	0.6381
+Label1 auc	0.6941
+Label1 ap	0.4242
+# 5th
+GNN F1	0.5982
+GNN Accuracy	0.6442
+GNN Recall	0.6549
+GNN auc	0.7177
+GNN ap	0.4512
+Label1 F1	0.5887
+Label1 Accuracy	0.6400
+Label1 Recall	0.6372
+Label1 auc	0.6940
+Label1 ap	0.4244
 ################################################
 # 5000 with 48 gist features
 # 1st
-GNN F1	0.6454
-GNN Accuracy	0.7622
-GNN Recall	0.6474
-GNN auc	0.7248
-GNN ap	0.4852
-Label1 F1	0.6308
-Label1 Accuracy	0.7602
-Label1 Recall	0.6286
-Label1 auc	0.6977
-Label1 ap	0.4488
+GNN F1	0.6270
+GNN Accuracy	0.7532
+GNN Recall	0.6284
+GNN auc	0.7058
+GNN ap	0.4660
+Label1 F1	0.6054
+Label1 Accuracy	0.7060
+Label1 Recall	0.6221
+Label1 auc	0.6915
+Label1 ap	0.4393
 # 2nd
-GNN F1	0.6433
-GNN Accuracy	0.7366
-GNN Recall	0.6631
-GNN auc	0.7203
-GNN ap	0.4851
-Label1 F1	0.6308
-Label1 Accuracy	0.7602
-Label1 Recall	0.6286
-Label1 auc	0.6983
-Label1 ap	0.4494
+GNN F1	0.6274
+GNN Accuracy	0.7483
+GNN Recall	0.6308
+GNN auc	0.7092
+GNN ap	0.4702
+Label1 F1	0.6202
+Label1 Accuracy	0.7385
+Label1 Recall	0.6254
+Label1 auc	0.6961
+Label1 ap	0.4474
 # 3rd
-GNN F1	0.6431
-GNN Accuracy	0.7504
-GNN Recall	0.6522
-GNN auc	0.7221
-GNN ap	0.4827
-Label1 F1	0.6271
-Label1 Accuracy	0.7572
-Label1 Recall	0.6252
-Label1 auc	0.6997
-Label1 ap	0.4503
+GNN F1	0.6370
+GNN Accuracy	0.7761
+GNN Recall	0.6294
+GNN auc	0.7069
+GNN ap	0.4672
+Label1 F1	0.6055
+Label1 Accuracy	0.7050
+Label1 Recall	0.6229
+Label1 auc	0.6903
+Label1 ap	0.4381
 # 4th
-GNN F1	0.6535
-GNN Accuracy	0.7671
-GNN Recall	0.6559
-GNN auc	0.7273
-GNN ap	0.4880
-Label1 F1	0.6303
-Label1 Accuracy	0.7622
-Label1 Recall	0.6269
-Label1 auc	0.6967
-Label1 ap	0.4469
-# 5th 
-GNN F1	0.6505
-GNN Accuracy	0.7602
-GNN Recall	0.6567
-GNN auc	0.7229
-GNN ap	0.4841
-Label1 F1	0.6291
-Label1 Accuracy	0.7622
-Label1 Recall	0.6255
-Label1 auc	0.6955
-Label1 ap	0.4458
+GNN F1	0.6300
+GNN Accuracy	0.7482
+GNN Recall	0.6340
+GNN auc	0.7126
+GNN ap	0.4736
+Label1 F1	0.6290
+Label1 Accuracy	0.7870
+Label1 Recall	0.6163
+Label1 auc	0.6938
+Label1 ap	0.4434
+# 5th
+GNN F1	0.6343
+GNN Accuracy	0.7651
+GNN Recall	0.6310
+GNN auc	0.7063
+GNN ap	0.4648
+Label1 F1	0.6161
+Label1 Accuracy	0.7257
+Label1 Recall	0.6262
+Label1 auc	0.6916
+Label1 ap	0.4398
+################################################
+# -1 with 48 gist features ; emb-size 64
+# 1st
+GNN F1	0.6138
+GNN Accuracy	0.6674
+GNN Recall	0.6612
+GNN auc	0.7230
+GNN ap	0.4530
+Label1 F1	0.5802
+Label1 Accuracy	0.6229
+Label1 Recall	0.6397
+Label1 auc	0.6983
+Label1 ap	0.4264
+# 2nd
+GNN F1	0.6086
+GNN Accuracy	0.6587
+GNN Recall	0.6604
+GNN auc	0.7231
+GNN ap	0.4522
+Label1 F1	0.5860
+Label1 Accuracy	0.6329
+Label1 Recall	0.6400
+Label1 auc	0.6983
+Label1 ap	0.4262
+# 3rd
+GNN F1	0.6199
+GNN Accuracy	0.6788
+GNN Recall	0.6610
+GNN auc	0.7224
+GNN ap	0.4562
+Label1 F1	0.5947
+Label1 Accuracy	0.6481
+Label1 Recall	0.6411
+Label1 auc	0.6980
+Label1 ap	0.4267
+# 4th
+GNN F1	0.6219
+GNN Accuracy	0.6838
+GNN Recall	0.6595
+GNN auc	0.7208
+GNN ap	0.4526
+Label1 F1	0.5908
+Label1 Accuracy	0.6409
+Label1 Recall	0.6410
+Label1 auc	0.6983
+Label1 ap	0.4264
+# 5th
+GNN F1	0.6060
+GNN Accuracy	0.6547
+GNN Recall	0.6594
+GNN auc	0.7212
+GNN ap	0.4507
+Label1 F1	0.5815
+Label1 Accuracy	0.6250
+Label1 Recall	0.6398
+Label1 auc	0.6982
+Label1 ap	0.4263
+################################################
+# -1 with 48 gist features ; emb-size 128
+run on watch; Dataset size (320691, 82); USING_GIST_AS feature; Random seed 1
+batch_size	256 | cuda	False | data	watch | emb_size	128 | inter	GNN | lambda_1	2 | lambda_2	0.001 | 
+lr	0.01 | model	CARE | no_cuda	False | num_epochs	31 | seed	1 | step_size	0.02 | test_epochs	3 | under_sample	1 |
+# 1st
+GNN F1	0.6156
+GNN Accuracy	0.6700
+GNN Recall	0.6622
+GNN auc	0.7235
+GNN ap	0.4545
+Label1 F1	0.5802
+Label1 Accuracy	0.6229
+Label1 Recall	0.6397
+Label1 auc	0.6983
+Label1 ap	0.4264
+# 2nd
+GNN F1	0.6127
+GNN Accuracy	0.6656
+GNN Recall	0.6608
+GNN auc	0.7230
+GNN ap	0.4532
+Label1 F1	0.5860
+Label1 Accuracy	0.6329
+Label1 Recall	0.6400
+Label1 auc	0.6983
+Label1 ap	0.4262
+# 3rd
+GNN F1	0.6193
+GNN Accuracy	0.6777
+GNN Recall	0.6611
+GNN auc	0.7227
+GNN ap	0.4568
+Label1 F1	0.5947
+Label1 Accuracy	0.6481
+Label1 Recall	0.6411
+Label1 auc	0.6980
+Label1 ap	0.4267
+# 4th
+GNN F1	0.6219
+GNN Accuracy	0.6835
+GNN Recall	0.6599
+GNN auc	0.7210
+GNN ap	0.4527
+Label1 F1	0.5908
+Label1 Accuracy	0.6409
+Label1 Recall	0.6410
+Label1 auc	0.6983
+Label1 ap	0.4264
+# 5th
+GNN F1	0.6038
+GNN Accuracy	0.6508
+GNN Recall	0.6597
+GNN auc	0.7226
+GNN ap	0.4533
+Label1 F1	0.5815
+Label1 Accuracy	0.6250
+Label1 Recall	0.6398
+Label1 auc	0.6982
+Label1 ap	0.4263

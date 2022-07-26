@@ -1,0 +1,194 @@
+################################################
+# yelp
+run on yelp; Dataset size (45954, 32); USING_GIST_AS None; Random seed 1
+batch_size	1024 | cuda	False | data	yelp | emb_size	64 | inter	GNN | lambda_1	2 | lambda_2	0.001 | 
+lr	0.01 | model	CARE | no_cuda	False | num_epochs	31 | seed	1 | step_size	0.02 | test_epochs	3 | under_sample	1 |
+# 1st
+GNN F1	0.6089
+GNN Accuracy	0.7081
+GNN Recall	0.7071
+GNN auc	0.7712
+GNN ap	0.3812
+Label1 F1	0.5979
+Label1 Accuracy	0.7131
+Label1 Recall	0.6721
+Label1 auc	0.7398
+Label1 ap	0.3216
+# 2nd
+GNN F1	0.5701
+GNN Accuracy	0.6465
+GNN Recall	0.7003
+GNN auc	0.7708
+GNN ap	0.3822
+Label1 F1	0.5794
+Label1 Accuracy	0.6731
+Label1 Recall	0.6819
+Label1 auc	0.7401
+Label1 ap	0.3209
+# 3rd
+GNN F1	0.5719
+GNN Accuracy	0.6494
+GNN Recall	0.7008
+GNN auc	0.7704
+GNN ap	0.3812
+Label1 F1	0.5680
+Label1 Accuracy	0.6538
+Label1 Recall	0.6806
+Label1 auc	0.7418
+Label1 ap	0.3247
+# 4th
+GNN F1	0.5977
+GNN Accuracy	0.6914
+GNN Recall	0.7037
+GNN auc	0.7705
+GNN ap	0.3828
+Label1 F1	0.5679
+Label1 Accuracy	0.6533
+Label1 Recall	0.6812
+Label1 auc	0.7411
+Label1 ap	0.3261
+# 5th
+GNN F1	0.6214
+GNN Accuracy	0.7298
+GNN Recall	0.7060
+GNN auc	0.7717
+GNN ap	0.3850
+Label1 F1	0.5921
+Label1 Accuracy	0.6986
+Label1 Recall	0.6777
+Label1 auc	0.7402
+Label1 ap	0.3250
+################################################
+# -1
+# 1st
+# 2nd
+# 3rd
+# 4th
+# 5th
+################################################
+# -1 with total votes > 1
+run on watch; Dataset size (151486, 34); USING_GIST_AS None; Random seed 1
+batch_size	1024 | cuda	False | data	watch | emb_size	64 | inter	GNN | lambda_1	2 | lambda_2	0.001 | 
+lr	0.01 | model	CARE | no_cuda	False | num_epochs	31 | seed	1 | step_size	0.02 | test_epochs	3 | under_sample	1 |
+# 1st
+GNN F1	0.6793
+GNN Accuracy	0.8060
+GNN Recall	0.7261
+GNN auc	0.8066
+GNN ap	0.4883
+Label1 F1	0.5963
+Label1 Accuracy	0.7025
+Label1 Recall	0.6829
+Label1 auc	0.7548
+Label1 ap	0.4080
+# 2nd
+GNN F1	0.6509
+GNN Accuracy	0.7574
+GNN Recall	0.7372
+GNN auc	0.8100
+GNN ap	0.4938
+Label1 F1	0.5953
+Label1 Accuracy	0.7014
+Label1 Recall	0.6821
+Label1 auc	0.7538
+Label1 ap	0.4064
+# 3rd
+GNN F1	0.6515
+GNN Accuracy	0.7581
+GNN Recall	0.7375
+GNN auc	0.8106
+GNN ap	0.4912
+Label1 F1	0.5986
+Label1 Accuracy	0.7069
+Label1 Recall	0.6824
+Label1 auc	0.7539
+Label1 ap	0.4071
+# 4th
+GNN F1	0.6719
+GNN Accuracy	0.7928
+GNN Recall	0.7303
+GNN auc	0.8082
+GNN ap	0.4922
+Label1 F1	0.5986
+Label1 Accuracy	0.7066
+Label1 Recall	0.6828
+Label1 auc	0.7544
+Label1 ap	0.4079
+# 5th
+GNN F1	0.6822
+GNN Accuracy	0.8076
+GNN Recall	0.7300
+GNN auc	0.8106
+GNN ap	0.4939
+Label1 F1	0.6043
+Label1 Accuracy	0.7168
+Label1 Recall	0.6827
+Label1 auc	0.7540
+Label1 ap	0.4074
+################################################
+# -1 with 48 gist features
+run on watch; Dataset size (320691, 82); USING_GIST_AS feature; Random seed 1
+batch_size	1024 | cuda	False | data	watch | emb_size	64 | inter	GNN | lambda_1	2 |
+lambda_2	0.001 | lr	0.01 | model	CARE | no_cuda	False | num_epochs	31 | seed	1 | step_size	0.02 | test_epochs	3 | under_sample	1 |
+# 1st
+GNN F1	0.6093
+GNN Accuracy	0.6600
+GNN Recall	0.6583
+GNN auc	0.7201
+GNN ap	0.4515
+Label1 F1	0.5902
+Label1 Accuracy	0.6386
+Label1 Recall	0.6406
+Label1 auc	0.6982
+Label1 ap	0.4268
+# 2nd
+GNN F1	0.6190
+GNN Accuracy	0.6763
+GNN Recall	0.6602
+GNN auc	0.7225
+GNN ap	0.4537
+Label1 F1	0.5876
+Label1 Accuracy	0.6343
+Label1 Recall	0.6400
+Label1 auc	0.6982
+Label1 ap	0.4261
+# 3rd
+GNN F1	0.6178
+GNN Accuracy	0.6748
+GNN Recall	0.6593
+GNN auc	0.7211
+GNN ap	0.4536
+Label1 F1	0.5983
+Label1 Accuracy	0.6534
+Label1 Recall	0.6412
+Label1 auc	0.6980
+Label1 ap	0.4267
+# 4th
+GNN F1	0.6235
+GNN Accuracy	0.6859
+GNN Recall	0.6591
+GNN auc	0.7209
+GNN ap	0.4527
+Label1 F1	0.5884
+Label1 Accuracy	0.6356
+Label1 Recall	0.6403
+Label1 auc	0.6982
+Label1 ap	0.4263
+# 5th
+GNN F1	0.6126
+GNN Accuracy	0.6651
+GNN Recall	0.6594
+GNN auc	0.7210
+GNN ap	0.4516
+Label1 F1	0.5945
+Label1 Accuracy	0.6461
+Label1 Recall	0.6412
+Label1 auc	0.6982
+Label1 ap	0.4269
+################################################
+# -1 with 48 gist features
+# 1st
+# 2nd
+# 3rd
+# 4th
+# 5th

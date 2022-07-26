@@ -12,6 +12,7 @@ from graphsage import *
 import pandas as pd
 from utils import tprint
 from collections import defaultdict
+import matplotlib.pyplot as plt
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
@@ -21,10 +22,11 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 	Source: https://github.com/YingtongDou/CARE-GNN
 """
 
+PLOT = True
 DATASET = "Watches_v1_00"
 # DATASET = "Shoes_v1_00"
-DATASET_SIZE = 5000 # -1 refers to whole dataset
-USING_GIST_AS = [None, 'feature', 'relation'][1]
+DATASET_SIZE = -1 # -1 refers to whole dataset
+USING_GIST_AS = [None, 'feature', 'relation'][0]
 DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
 
@@ -37,10 +39,10 @@ df = pd.read_pickle(DF_FILE_NAME_WITH_FEATURES, compression={"method": "gzip", "
 parser = argparse.ArgumentParser()
 
 # dataset and model dependent args
-parser.add_argument('--data', type=str, default='yelp', help='The dataset name. [yelp, amazon]')
+parser.add_argument('--data', type=str, default='yelp', help='The dataset name. [yelp, amazon, watch]')
 parser.add_argument('--model', type=str, default='CARE', help='The model name. [CARE, SAGE]')
 parser.add_argument('--inter', type=str, default='GNN', help='The inter-relation aggregator type. [Att, Weight, Mean, GNN]')
-parser.add_argument('--batch-size', type=int, default=256, help='Batch size 1024 for yelp, 256 for amazon.')
+parser.add_argument('--batch-size', type=int, default=1024, help='Batch size 1024 for yelp, 256 for amazon.')
 
 # hyper-parameters
 parser.add_argument('--lr', type=float, default=0.01, help='Initial learning rate.')
@@ -54,18 +56,18 @@ parser.add_argument('--step-size', type=float, default=2e-2, help='RL action ste
 
 # other args
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables CUDA training.')
-parser.add_argument('--seed', type=int, default=72, help='Random seed.')
-
+parser.add_argument('--seed', type=int, default=5, help='Random seed.')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
-print(f'run on {args.data}; USING_GIST_AS {USING_GIST_AS}')
+print(f'run on {args.data}; USING_GIST_AS {USING_GIST_AS}; Random seed {args.seed}')
 
 # load graph, feature, and label
 if args.data in ['amazon', 'yelp']:
 	[homo, relation1, relation2, relation3], feat_data, labels = load_data(args.data)
+	relation_list = [relation1, relation2, relation3]
 	tprint(f"Feature size", feat_data.shape)
-else:
+elif args.data == 'watch':
 	feature_list = ['f_user_MNR',
 		   'f_user_PR', 'f_user_NR', 'f_user_avgRD', 'f_user_WRD', 'f_user_BST',
 		   'f_user_ERD', 'f_user_ETG', 'f_user_RL', 'f_user_ACS', 'f_user_MCS',
@@ -77,11 +79,12 @@ else:
 	if USING_GIST_AS == 'feature':
 		feature_list.extend([col for col in df.columns if 'f_gist_' in col])
 
-	target_df_indices = ~pd.isna(df['genuine'])
+	target_df_indices = (~pd.isna(df['genuine'])) & (df['total_votes'] > 1)
 	feat_data = df.loc[target_df_indices, feature_list].to_numpy(dtype=float)
 	labels = (1 - df.loc[target_df_indices, 'genuine']).to_numpy(dtype=float)
 	tprint(f"Feature size", feat_data.shape)
 
+	# Build Relations
 	tprint('Computing RUR...')
 	customer_id_to_index_list = defaultdict(list)
 	relation_RUR = defaultdict(set)
@@ -109,7 +112,19 @@ else:
 		s = set(index_list)
 		for index in index_list:
 			relation_RTR[index] = s
-	relation1, relation2, relation3 = relation_RUR, relation_RSR, relation_RTR
+	relation_list = [relation_RUR, relation_RSR, relation_RTR]
+
+	if USING_GIST_AS == 'relation':
+		for col in [col for col in df.columns if 'f_gist_' in col]:
+			tprint(f'Computing Relation for gist "{col[7:]}"...')
+			gist_relation = defaultdict(set)
+			rounded_distance = ((df.loc[target_df_indices, col].reset_index(drop=True)*2).round(1))/2
+			for rounded_value in rounded_distance.unique():
+				index_list = rounded_distance.index[rounded_distance==rounded_value]
+				s = set(index_list)
+				for index in index_list:
+					gist_relation[index] = s
+			relation_list.append(gist_relation)
 
 # train_test split
 np.random.seed(args.seed)
@@ -138,17 +153,19 @@ if args.cuda:
 if args.model == 'SAGE':
 	adj_lists = homo
 else:
-	adj_lists = [relation1, relation2, relation3]
+	adj_lists = relation_list
 
 print(f'Model: {args.model}, Inter-AGG: {args.inter}, emb_size: {args.emb_size}.')
 
 # build one-layer models
 if args.model == 'CARE':
-	intra1 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
-	intra2 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
-	intra3 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
-	inter1 = InterAgg(features, feat_data.shape[1], args.emb_size, adj_lists, [intra1, intra2, intra3], inter=args.inter,
-					  step_size=args.step_size, cuda=args.cuda)
+	inter1 = InterAgg(features, feat_data.shape[1], args.emb_size, adj_lists, [IntraAgg(features, feat_data.shape[1], cuda=args.cuda) for i in range(len(adj_lists))],
+					  inter=args.inter, step_size=args.step_size, cuda=args.cuda)
+	# intra1 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
+	# intra2 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
+	# intra3 = IntraAgg(features, feat_data.shape[1], cuda=args.cuda)
+	# inter1 = InterAgg(features, feat_data.shape[1], args.emb_size, adj_lists, [intra1, intra2, intra3], inter=args.inter,
+	# 				  step_size=args.step_size, cuda=args.cuda)
 elif args.model == 'SAGE':
 	agg1 = MeanAggregator(features, cuda=args.cuda)
 	enc1 = Encoder(features, feat_data.shape[1], args.emb_size, adj_lists, agg1, gcn=True, cuda=args.cuda)
@@ -167,6 +184,7 @@ optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, gnn_model.paramet
 times = []
 performance_log = []
 
+tprint("Training Started...")
 # train the model
 for epoch in range(args.num_epochs):
 	# randomly under-sampling negative nodes for each epoch
@@ -208,3 +226,19 @@ for epoch in range(args.num_epochs):
 		else:
 			gnn_auc, label_auc, gnn_recall, label_recall = test_care(idx_test, y_test, gnn_model, args.batch_size)
 			performance_log.append([gnn_auc, label_auc, gnn_recall, label_recall])
+
+if PLOT:
+	performance_log = np.array(performance_log)
+	fig, axes = plt.subplots(nrows=2, ncols=1, sharex=True, figsize=(6, 8))
+	axes[0].plot(np.arange(len(performance_log)), performance_log[:, 0], label='gnn_auc')
+	axes[0].plot(np.arange(len(performance_log)), performance_log[:, 1], label='label_auc')
+	axes[1].plot(np.arange(len(performance_log)), performance_log[:, 2], label='gnn_recall')
+	axes[1].plot(np.arange(len(performance_log)), performance_log[:, 3], label='label_recall')
+	axes[0].set_ylim(0, 1.0)
+	axes[1].set_ylim(0, 1.0)
+	axes[0].legend(loc="upper left")
+	axes[1].legend(loc="upper left")
+	plt.show()
+print(f'run on {args.data}; Dataset size {feat_data.shape}; USING_GIST_AS {USING_GIST_AS}; Random seed {args.seed}')
+print(*[f"{key}: {value} |" for key, value in args._get_kwargs()])
+tprint("Finished")

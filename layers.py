@@ -36,17 +36,20 @@ class InterAgg(nn.Module):
 		self.features = features
 		self.dropout = 0.6
 		self.adj_lists = adj_lists
-		self.intra_agg1 = intraggs[0]
-		self.intra_agg2 = intraggs[1]
-		self.intra_agg3 = intraggs[2]
+		self.intra_aggs = intraggs
+		# self.intra_agg1 = intraggs[0]
+		# self.intra_agg2 = intraggs[1]
+		# self.intra_agg3 = intraggs[2]
 		self.embed_dim = embed_dim
 		self.feat_dim = feature_dim
 		self.inter = inter
 		self.step_size = step_size
 		self.cuda = cuda
-		self.intra_agg1.cuda = cuda
-		self.intra_agg2.cuda = cuda
-		self.intra_agg3.cuda = cuda
+		for intra_agg in self.intra_aggs:
+			intra_agg.cuda = cuda
+		# self.intra_agg1.cuda = cuda
+		# self.intra_agg2.cuda = cuda
+		# self.intra_agg3.cuda = cuda
 
 		# RL condition flag
 		self.RL = True
@@ -55,7 +58,7 @@ class InterAgg(nn.Module):
 		self.batch_num = 0
 
 		# initial filtering thresholds
-		self.thresholds = [0.5, 0.5, 0.5]
+		self.thresholds = [0.5] * len(intraggs)
 
 		# the activation function used by attention mechanism
 		self.leakyrelu = nn.LeakyReLU(0.2)
@@ -65,7 +68,7 @@ class InterAgg(nn.Module):
 		init.xavier_uniform_(self.weight)
 
 		# weight parameter for each relation used by CARE-Weight
-		self.alpha = nn.Parameter(torch.FloatTensor(self.embed_dim, 3))
+		self.alpha = nn.Parameter(torch.FloatTensor(self.embed_dim, len(intraggs)))
 		init.xavier_uniform_(self.alpha)
 
 		# parameters used by attention layer
@@ -95,8 +98,9 @@ class InterAgg(nn.Module):
 			to_neighs.append([set(adj_list[int(node)]) for node in nodes])
 
 		# find unique nodes and their neighbors used in current batch
-		unique_nodes = set.union(set.union(*to_neighs[0]), set.union(*to_neighs[1]),
-								 set.union(*to_neighs[2], set(nodes)))
+		unique_nodes = set.union(set(nodes), *[set.union(*to_neighs[i]) for i in range(len(to_neighs))])
+		# unique_nodes = set.union(set.union(*to_neighs[0]), set.union(*to_neighs[1]),
+		# 						 set.union(*to_neighs[2], set(nodes)))
 
 		# calculate label-aware scores
 		if self.cuda:
@@ -110,28 +114,46 @@ class InterAgg(nn.Module):
 		center_scores = batch_scores[itemgetter(*nodes)(id_mapping), :]
 
 		# get neighbor node id list for each batch node and relation
-		r1_list = [list(to_neigh) for to_neigh in to_neighs[0]]
-		r2_list = [list(to_neigh) for to_neigh in to_neighs[1]]
-		r3_list = [list(to_neigh) for to_neigh in to_neighs[2]]
+		relation_list = [
+			[list(to_neigh) for to_neigh in to_neighs[i]]
+			for i in range(len(to_neighs))
+		]
+		# r1_list = [list(to_neigh) for to_neigh in to_neighs[0]]
+		# r2_list = [list(to_neigh) for to_neigh in to_neighs[1]]
+		# r3_list = [list(to_neigh) for to_neigh in to_neighs[2]]
 
 		# assign label-aware scores to neighbor nodes for each batch node and relation
-		r1_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r1_list]
-		r2_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r2_list]
-		r3_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r3_list]
+		relation_scores = [
+			[batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in relation_list[i]]
+			for i in range(len(to_neighs))
+		]
+		# r1_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r1_list]
+		# r2_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r2_list]
+		# r3_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r3_list]
 
 		# count the number of neighbors kept for aggregation for each batch node and relation
-		r1_sample_num_list = [math.ceil(len(neighs) * self.thresholds[0]) for neighs in r1_list]
-		r2_sample_num_list = [math.ceil(len(neighs) * self.thresholds[1]) for neighs in r2_list]
-		r3_sample_num_list = [math.ceil(len(neighs) * self.thresholds[2]) for neighs in r3_list]
+		relation_sample_num_list = [
+			[math.ceil(len(neighs) * self.thresholds[0]) for neighs in relation_list[i]]
+			for i in range(len(to_neighs))
+		]
+		# r1_sample_num_list = [math.ceil(len(neighs) * self.thresholds[0]) for neighs in r1_list]
+		# r2_sample_num_list = [math.ceil(len(neighs) * self.thresholds[1]) for neighs in r2_list]
+		# r3_sample_num_list = [math.ceil(len(neighs) * self.thresholds[2]) for neighs in r3_list]
 
 		# intra-aggregation steps for each relation
 		# Eq. (8) in the paper
-		r1_feats, r1_scores = self.intra_agg1.forward(nodes, r1_list, center_scores, r1_scores, r1_sample_num_list)
-		r2_feats, r2_scores = self.intra_agg2.forward(nodes, r2_list, center_scores, r2_scores, r2_sample_num_list)
-		r3_feats, r3_scores = self.intra_agg3.forward(nodes, r3_list, center_scores, r3_scores, r3_sample_num_list)
+		relation_feats = []
+		for i in range(len(to_neighs)):
+			feats, scores = self.intra_aggs[i].forward(nodes, relation_list[i], center_scores, relation_scores[i], relation_sample_num_list[i])
+			relation_feats.append(feats)
+			relation_scores[i] = scores
+		# r1_feats, r1_scores = self.intra_agg1.forward(nodes, r1_list, center_scores, r1_scores, r1_sample_num_list)
+		# r2_feats, r2_scores = self.intra_agg2.forward(nodes, r2_list, center_scores, r2_scores, r2_sample_num_list)
+		# r3_feats, r3_scores = self.intra_agg3.forward(nodes, r3_list, center_scores, r3_scores, r3_sample_num_list)
 
 		# concat the intra-aggregated embeddings from each relation
-		neigh_feats = torch.cat((r1_feats, r2_feats, r3_feats), dim=0)
+		neigh_feats = torch.cat(tuple(relation_feats), dim=0)
+		# neigh_feats = torch.cat((r1_feats, r2_feats, r3_feats), dim=0)
 
 		# get features or embeddings for batch nodes
 		if self.cuda and isinstance(nodes, list):
@@ -164,12 +186,16 @@ class InterAgg(nn.Module):
 
 		# the reinforcement learning module
 		if self.RL and train_flag:
-			relation_scores, rewards, thresholds, stop_flag = RLModule([r1_scores, r2_scores, r3_scores],
+			_relation_scores, rewards, thresholds, stop_flag = RLModule(relation_scores,
 																	   self.relation_score_log, labels, self.thresholds,
 																	   self.batch_num, self.step_size)
+			# relation_scores, rewards, thresholds, stop_flag = RLModule([r1_scores, r2_scores, r3_scores],
+			# 														   self.relation_score_log, labels, self.thresholds,
+			# 														   self.batch_num, self.step_size)
 			self.thresholds = thresholds
 			self.RL = stop_flag
-			self.relation_score_log.append(relation_scores)
+			self.relation_score_log.append(_relation_scores)
+			# self.relation_score_log.append(relation_scores)
 			self.thresholds_log.append(self.thresholds)
 
 		return combined, center_scores
@@ -260,7 +286,7 @@ def RLModule(scores, scores_log, labels, thresholds, batch_num, step_size):
 
 	if len(scores_log) % batch_num != 0 or len(scores_log) < 2 * batch_num:
 		# do not call RL module within the epoch or within the first two epochs
-		rewards = [0, 0, 0]
+		rewards = [0] * len(thresholds)
 		new_thresholds = thresholds
 	else:
 		# update thresholds according to average scores in last epoch
