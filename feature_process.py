@@ -2,6 +2,7 @@ import tensorflow_datasets as tfds
 import pandas as pd
 import spacy
 import numpy as np
+import math
 from numpy import linalg as LA
 from scipy import sparse
 import gensim
@@ -21,12 +22,12 @@ DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pk
 
 GENUINE_THRESHOLD = 0.7
 FRAUDULENT_THRESHOLD = 0.3
+TOTAL_VOTES_GT_1 = False
 
 # WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{DATASET_SIZE}"
 WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{-1}"
 
-KEYWORD_LIST = ['crystal', 'solid', 'stainless', 'timer', 'power', 'worry', 'nicely', 'atomic', 'note', 'stopwatch', 'soft', 'dressy', 'mode', 'accuracy', 'tone', 'reviewer', 'shower', 'rugged', 'sapphire', 'marker', 'switch', 'contrast', 'minor', 'justice', 'smooth', 'glance', 'luminous', 'durability', 'fully', 'signal', 'combination', 'lume', 'feminine', 'unlike', 'countdown', 'abuse', 'relatively', 'readable', 'pearl', 'polish', 'substantial', 'angle', 'silicone', 'reasonably', 'resin', 'notch', 'depend', 'dual']
-
+KEYWORD_LIST = ['crystal', 'solid', 'stainless', 'timer', 'power', 'atomic', 'note', 'worry', 'nicely', 'accuracy', 'mode', 'sapphire', 'stopwatch', 'reviewer', 'marker', 'tone', 'dressy', 'soft', 'shower', 'rugged', 'contrast', 'switch', 'minor', 'luminous', 'lume', 'justice', 'smooth', 'signal', 'glance', 'fully', 'durability', 'countdown', 'unlike', 'combination', 'polish', 'angle', 'relatively', 'mineral', 'substantial', 'pearl', 'readable', 'reserve', 'feminine', 'abuse', 'resin', 'depend', 'radio', 'marking', 'automatically', 'sweep']
 
 def wordnet_tag(nltk_tag):
     if nltk_tag.startswith('J'):
@@ -112,6 +113,7 @@ def load_dataset():
                 df[column] = df[column].str.decode('utf-8')
 
         tprint('Preprocessing Words...')
+        df["review_body"] = df["review_body"].str.replace('<br />', ' ')
         df['processed_words'], df['word_list'] = preprocess(df["review_body"])
 
         tprint('Creating Words Sets...')
@@ -136,6 +138,9 @@ def load_dataset():
     tprint('Fetching Target DataFrame...')
     genuine = (df['helpful_votes'] / df['total_votes']) >= GENUINE_THRESHOLD
     fraud = (df['helpful_votes'] / df['total_votes']) <= FRAUDULENT_THRESHOLD
+    if TOTAL_VOTES_GT_1:
+        genuine = genuine & (df['total_votes'] > 1)
+        fraud = fraud & (df['total_votes'] > 1)
     target_df = df.loc[genuine | fraud]
     genuine_ratio = sum(genuine) / sum(fraud)
     tprint("Size of Dataset", df.shape)
@@ -356,10 +361,12 @@ def process_review_behaviour_features(df):
     df['f_ISR'] = pd.Series(ISR)
 
 def process_review_text_features(df):
-    from nltk import sent_tokenize
+    from nltk import sent_tokenize, word_tokenize
+    import string
     from textblob import TextBlob
     PP1_WORDS = set(['i', 'me', 'we', 'us', 'myself', 'ourselves', 'my', 'our', 'mine', 'ours'])
     PP2_WORDS = set(['you', 'your', 'yours', 'yourself', 'yourselves'])
+    PUNCTUATION_SET = set(string.punctuation)
     ################################################
     tprint('Computing L...')
     L = df['word_list'].str.len()
@@ -386,6 +393,13 @@ def process_review_text_features(df):
     OW = df_subjectivity.apply(lambda subjectivity_list: len([1 for subjectivity in subjectivity_list if subjectivity == 0.0])) / df_subjectivity_len
     OW.loc[(OW > 1) | pd.isna(OW)] = 0  # set divided by 0
 
+    N = len(df)
+    unigram_count = Counter(unigram for unigrams in df['word_list'] for unigram in unigrams)
+    DL_u = df['word_list'].apply(lambda word_list: sum(-math.log(unigram_count[unigram]/N, 2) for unigram in word_list))
+    df_bigrams = df_sentence_list.apply(lambda sentence_list: [bigram for sentence in sentence_list for bigram in nltk.bigrams(word for word in word_tokenize(sentence) if word not in PUNCTUATION_SET)])
+    bigram_count = Counter(bigram for bigrams in df_bigrams for bigram in bigrams)
+    DL_b = df_bigrams.apply(lambda bigram_list: sum(-math.log(bigram_count[bigram]/N, 2) for bigram in bigram_list))
+
     tprint('Assigning Features to Columns...')
     df['f_L'] = L
     df['f_PC'] = PC
@@ -394,6 +408,8 @@ def process_review_text_features(df):
     df['f_RES'] = RES
     df['f_SW'] = SW
     df['f_OW'] = OW
+    df['f_DL_u'] = DL_u
+    df['f_DL_b'] = DL_b
 
 def process_gist_features(df):
     word_2_vec_model = Word2Vec.load(WORD_2_VEC_MODEL_NAME)
@@ -442,7 +458,7 @@ def process_features(df):
         tprint('Processing Review Behaviour Features...')
         process_review_behaviour_features(df)
         updated = True
-    if not all([col in df.columns for col in ['f_PCW', 'f_PC', 'f_L', 'f_PP1', 'f_RES', 'f_SW', 'f_OW']]):
+    if not all([col in df.columns for col in ['f_PCW', 'f_PC', 'f_L', 'f_PP1', 'f_RES', 'f_SW', 'f_OW', 'f_DL_u', 'f_DL_b']]):
         tprint('Processing Review Behaviour Features...')
         process_review_text_features(df)
         updated = True
@@ -463,7 +479,7 @@ if __name__ == '__main__':
     df, target_df, genuine_ratio = load_dataset()
     print_gist_features_stats(df)
     # process_features(df)
-    # print(important_keywords(df, genuine_ratio * 3))
+    # print(important_keywords(target_df, genuine_ratio * 3))
     # model = train_word_2_vec_model()
     # save_word_2_vec_model(model)
     tprint('end')
