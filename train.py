@@ -5,9 +5,9 @@ import argparse
 from sklearn.model_selection import train_test_split
 
 from utils import *
-from model import *
+from model_CareGNN import *
 from layers import *
-from graphsage import *
+from model_GraphSAGE import *
 
 import pandas as pd
 from utils import tprint
