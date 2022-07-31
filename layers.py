@@ -3,7 +3,8 @@ import torch.nn as nn
 from torch.nn import init
 import torch.nn.functional as F
 from torch.autograd import Variable
-
+from utils import tprint
+from datetime import datetime
 
 from operator import itemgetter
 import math
@@ -92,15 +93,18 @@ class InterAgg(nn.Module):
 		:return center_scores: the label-aware scores of batch nodes
 		"""
 
+		prev_t = tprint("inter f 0", prev_t=datetime.now())
 		# extract 1-hop neighbor ids from adj lists of each single-relation graph
 		to_neighs = []
 		for adj_list in self.adj_lists:
 			to_neighs.append([set(adj_list[int(node)]) for node in nodes])
+		prev_t = tprint("inter f 1", prev_t=prev_t)
 
 		# find unique nodes and their neighbors used in current batch
 		unique_nodes = set.union(set(nodes), *[set.union(*to_neighs[i]) for i in range(len(to_neighs))])
 		# unique_nodes = set.union(set.union(*to_neighs[0]), set.union(*to_neighs[1]),
 		# 						 set.union(*to_neighs[2], set(nodes)))
+		prev_t = tprint("inter f 2", prev_t=prev_t)
 
 		# calculate label-aware scores
 		if self.cuda:
@@ -109,15 +113,18 @@ class InterAgg(nn.Module):
 			batch_features = self.features(torch.LongTensor(list(unique_nodes)))
 		batch_scores = self.label_clf(batch_features)
 		id_mapping = {node_id: index for node_id, index in zip(unique_nodes, range(len(unique_nodes)))}
+		prev_t = tprint("inter f 3", prev_t=prev_t)
 
 		# the label-aware scores for current batch of nodes
 		center_scores = batch_scores[itemgetter(*nodes)(id_mapping), :]
+		prev_t = tprint("inter f 4", prev_t=prev_t)
 
 		# get neighbor node id list for each batch node and relation
 		relation_list = [
 			[list(to_neigh) for to_neigh in to_neighs[i]]
 			for i in range(len(to_neighs))
 		]
+		prev_t = tprint("inter f 5", prev_t=prev_t)
 		# r1_list = [list(to_neigh) for to_neigh in to_neighs[0]]
 		# r2_list = [list(to_neigh) for to_neigh in to_neighs[1]]
 		# r3_list = [list(to_neigh) for to_neigh in to_neighs[2]]
@@ -127,6 +134,7 @@ class InterAgg(nn.Module):
 			[batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in relation_list[i]]
 			for i in range(len(to_neighs))
 		]
+		prev_t = tprint("inter f 6", prev_t=prev_t)
 		# r1_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r1_list]
 		# r2_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r2_list]
 		# r3_scores = [batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in r3_list]
@@ -136,6 +144,7 @@ class InterAgg(nn.Module):
 			[math.ceil(len(neighs) * self.thresholds[0]) for neighs in relation_list[i]]
 			for i in range(len(to_neighs))
 		]
+		prev_t = tprint("inter f 7", prev_t=prev_t)
 		# r1_sample_num_list = [math.ceil(len(neighs) * self.thresholds[0]) for neighs in r1_list]
 		# r2_sample_num_list = [math.ceil(len(neighs) * self.thresholds[1]) for neighs in r2_list]
 		# r3_sample_num_list = [math.ceil(len(neighs) * self.thresholds[2]) for neighs in r3_list]
@@ -147,12 +156,14 @@ class InterAgg(nn.Module):
 			feats, scores = self.intra_aggs[i].forward(nodes, relation_list[i], center_scores, relation_scores[i], relation_sample_num_list[i])
 			relation_feats.append(feats)
 			relation_scores[i] = scores
+		prev_t = tprint("inter f 8", prev_t=prev_t)
 		# r1_feats, r1_scores = self.intra_agg1.forward(nodes, r1_list, center_scores, r1_scores, r1_sample_num_list)
 		# r2_feats, r2_scores = self.intra_agg2.forward(nodes, r2_list, center_scores, r2_scores, r2_sample_num_list)
 		# r3_feats, r3_scores = self.intra_agg3.forward(nodes, r3_list, center_scores, r3_scores, r3_sample_num_list)
 
 		# concat the intra-aggregated embeddings from each relation
 		neigh_feats = torch.cat(tuple(relation_feats), dim=0)
+		prev_t = tprint("inter f 9", prev_t=prev_t)
 		# neigh_feats = torch.cat((r1_feats, r2_feats, r3_feats), dim=0)
 
 		# get features or embeddings for batch nodes
@@ -161,6 +172,7 @@ class InterAgg(nn.Module):
 		else:
 			index = torch.LongTensor(nodes)
 		self_feats = self.features(index)
+		prev_t = tprint("inter f 10", prev_t=prev_t)
 
 		# number of nodes in a batch
 		n = len(nodes)
@@ -183,6 +195,7 @@ class InterAgg(nn.Module):
 		elif self.inter == 'GNN':
 			# 4) CARE-GNN Inter-relation Aggregator
 			combined = threshold_inter_agg(len(self.adj_lists), self_feats, neigh_feats, self.embed_dim, self.weight, self.thresholds, n, self.cuda)
+		prev_t = tprint("inter f 11", prev_t=prev_t)
 
 		# the reinforcement learning module
 		if self.RL and train_flag:
@@ -197,6 +210,7 @@ class InterAgg(nn.Module):
 			self.relation_score_log.append(_relation_scores)
 			# self.relation_score_log.append(relation_scores)
 			self.thresholds_log.append(self.thresholds)
+		prev_t = tprint("inter f 12", prev_t=prev_t)
 
 		return combined, center_scores
 
@@ -229,27 +243,34 @@ class IntraAgg(nn.Module):
 		"""
 
 		# filer neighbors under given relation
+		prev_t = tprint("intra f 1", prev_t=datetime.now())
 		samp_neighs, samp_scores = filter_neighs_ada_threshold(batch_scores, neigh_scores, to_neighs_list, sample_list)
+		prev_t = tprint("intra f 2", prev_t=prev_t)
 
 		# find the unique nodes among batch nodes and the filtered neighbors
 		unique_nodes_list = list(set.union(*samp_neighs))
 		unique_nodes = {n: i for i, n in enumerate(unique_nodes_list)}
+		prev_t = tprint("intra f 3", prev_t=prev_t)
 
 		# intra-relation aggregation only with sampled neighbors
 		mask = Variable(torch.zeros(len(samp_neighs), len(unique_nodes)))
 		column_indices = [unique_nodes[n] for samp_neigh in samp_neighs for n in samp_neigh]
 		row_indices = [i for i in range(len(samp_neighs)) for _ in range(len(samp_neighs[i]))]
 		mask[row_indices, column_indices] = 1
+		prev_t = tprint("intra f 4", prev_t=prev_t)
 		if self.cuda:
 			mask = mask.cuda()
 		num_neigh = mask.sum(1, keepdim=True)
 		mask = mask.div(num_neigh)
+		prev_t = tprint("intra f 5", prev_t=prev_t)
 		if self.cuda:
 			embed_matrix = self.features(torch.LongTensor(unique_nodes_list).cuda())
 		else:
 			embed_matrix = self.features(torch.LongTensor(unique_nodes_list))
+		prev_t = tprint("intra f 6", prev_t=prev_t)
 		to_feats = mask.mm(embed_matrix)
 		to_feats = F.relu(to_feats)
+		prev_t = tprint("intra f 7", prev_t=prev_t)
 		return to_feats, samp_scores
 
 
@@ -278,12 +299,14 @@ def RLModule(scores, scores_log, labels, thresholds, batch_num, step_size):
 	pos_index = [i[0] for i in pos_index]
 
 	# compute average neighbor distances for each relation
+	prev_t = tprint("RL f 1", prev_t=datetime.now())
 	for score in scores:
 		pos_scores = itemgetter(*pos_index)(score)
 		neigh_count = sum([1 if isinstance(i, float) else len(i) for i in pos_scores])
 		pos_sum = [i if isinstance(i, float) else sum(i) for i in pos_scores]
 		relation_scores.append(sum(pos_sum) / neigh_count)
-
+	prev_t = tprint("RL f 2", prev_t=prev_t)
+	
 	if len(scores_log) % batch_num != 0 or len(scores_log) < 2 * batch_num:
 		# do not call RL module within the epoch or within the first two epochs
 		rewards = [0] * len(thresholds)
@@ -293,15 +316,18 @@ def RLModule(scores, scores_log, labels, thresholds, batch_num, step_size):
 		# Eq.(5) in the paper
 		previous_epoch_scores = [sum(s) / batch_num for s in zip(*scores_log[-2 * batch_num:-batch_num])]
 		current_epoch_scores = [sum(s) / batch_num for s in zip(*scores_log[-batch_num:])]
+		prev_t = tprint("RL f 3", prev_t=prev_t)
 
 		# compute reward for each relation and update the thresholds according to reward
 		# Eq. (6) in the paper
 		rewards = [1 if previous_epoch_scores[i] - s >= 0 else -1 for i, s in enumerate(current_epoch_scores)]
 		new_thresholds = [thresholds[i] + step_size if r == 1 else thresholds[i] - step_size for i, r in enumerate(rewards)]
+		prev_t = tprint("RL f 3", prev_t=prev_t)
 
 		# avoid overflow
 		new_thresholds = [0.999 if i > 1 else i for i in new_thresholds]
 		new_thresholds = [0.001 if i < 0 else i for i in new_thresholds]
+		prev_t = tprint("RL f 4", prev_t=prev_t)
 
 		print(f'epoch scores: {current_epoch_scores}')
 		print(f'rewards: {rewards}')
@@ -323,6 +349,7 @@ def filter_neighs_ada_threshold(center_scores, neigh_scores, neighs_list, sample
 	:return samp_scores: the average neighbor distances for each relation after filtering
 	"""
 
+	prev_t = tprint("fnat 1", prev_t=datetime.now())
 	samp_neighs = []
 	samp_scores = []
 	for idx, center_score in enumerate(center_scores):
@@ -331,26 +358,31 @@ def filter_neighs_ada_threshold(center_scores, neigh_scores, neighs_list, sample
 		center_score = center_score.repeat(neigh_score.size()[0], 1)
 		neighs_indices = neighs_list[idx]
 		num_sample = sample_list[idx]
+		prev_t = tprint("fnat 2", prev_t=prev_t)
 
 		# compute the L1-distance of batch nodes and their neighbors
 		# Eq. (2) in paper
 		score_diff = torch.abs(center_score - neigh_score).squeeze()
 		sorted_scores, sorted_indices = torch.sort(score_diff, dim=0, descending=False)
 		selected_indices = sorted_indices.tolist()
+		prev_t = tprint("fnat 3", prev_t=prev_t)
 
 		# top-p sampling according to distance ranking and thresholds
 		# Section 3.3.1 in paper
 		if len(neigh_scores[idx]) > num_sample + 1:
 			selected_neighs = [neighs_indices[n] for n in selected_indices[:num_sample]]
 			selected_scores = sorted_scores.tolist()[:num_sample]
+			prev_t = tprint("fnat 4", prev_t=prev_t)
 		else:
 			selected_neighs = neighs_indices
 			selected_scores = score_diff.tolist()
 			if isinstance(selected_scores, float):
 				selected_scores = [selected_scores]
+			prev_t = tprint("fnat 5", prev_t=prev_t)
 
 		samp_neighs.append(set(selected_neighs))
 		samp_scores.append(selected_scores)
+		prev_t = tprint("fnat 6", prev_t=prev_t)
 
 	return samp_neighs, samp_scores
 

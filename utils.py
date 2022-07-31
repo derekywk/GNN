@@ -213,5 +213,15 @@ def test_care(test_cases, labels, model, batch_size):
 
 	return auc_gnn, auc_label1, recall_gnn / test_batch_num, recall_label1 / test_batch_num
 
-def tprint(*args):
-    print(datetime.now(), *args)
+VERBOSE = {
+	'TIME_TAKEN': True
+}
+
+def tprint(*args, prev_t=None):
+	now = datetime.now()
+	if prev_t:
+		if VERBOSE['TIME_TAKEN']:
+			print(now, f'Time taken: {(datetime.now() - prev_t).microseconds} ms;', *args)
+	else:
+		print(now, *args)
+	return now

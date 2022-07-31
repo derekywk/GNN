@@ -22,11 +22,14 @@ os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 	Source: https://github.com/YingtongDou/CARE-GNN
 """
 
+VERBOSE['TIME_TAKEN'] = False
+NORMALIZATION = [None, 'row', 'max_column', 'sum_column'][1]
 PLOT = True
 DATASET = "Watches_v1_00"
 # DATASET = "Shoes_v1_00"
 DATASET_SIZE = -1 # -1 refers to whole dataset
-USING_GIST_AS = [None, 'feature', 'relation'][0]
+USING_GIST_AS = [None, 'feature', 'relation'][2]
+TOTAL_VOTES_GT_1 = True
 DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
 
@@ -39,24 +42,24 @@ df = pd.read_pickle(DF_FILE_NAME_WITH_FEATURES, compression={"method": "gzip", "
 parser = argparse.ArgumentParser()
 
 # dataset and model dependent args
-parser.add_argument('--data', type=str, default='yelp', help='The dataset name. [yelp, amazon, watch]')
+parser.add_argument('--data', type=str, default='watch', help='The dataset name. [yelp, amazon, watch]')
 parser.add_argument('--model', type=str, default='CARE', help='The model name. [CARE, SAGE]')
 parser.add_argument('--inter', type=str, default='GNN', help='The inter-relation aggregator type. [Att, Weight, Mean, GNN]')
-parser.add_argument('--batch-size', type=int, default=1024, help='Batch size 1024 for yelp, 256 for amazon.')
+parser.add_argument('--batch-size', type=int, default=256, help='Batch size 1024 for yelp, 256 for amazon.')
 
 # hyper-parameters
 parser.add_argument('--lr', type=float, default=0.01, help='Initial learning rate.')
 parser.add_argument('--lambda_1', type=float, default=2, help='Simi loss weight.')
 parser.add_argument('--lambda_2', type=float, default=1e-3, help='Weight decay (L2 loss weight).')
 parser.add_argument('--emb-size', type=int, default=64, help='Node embedding size at the last layer.')
-parser.add_argument('--num-epochs', type=int, default=31, help='Number of epochs.')
+parser.add_argument('--num-epochs', type=int, default=19, help='Number of epochs.')
 parser.add_argument('--test-epochs', type=int, default=3, help='Epoch interval to run test set.')
 parser.add_argument('--under-sample', type=int, default=1, help='Under-sampling scale.')
 parser.add_argument('--step-size', type=float, default=2e-2, help='RL action step size')
 
 # other args
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables CUDA training.')
-parser.add_argument('--seed', type=int, default=5, help='Random seed.')
+parser.add_argument('--seed', type=int, default=3, help='Random seed.')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
@@ -79,7 +82,9 @@ elif args.data == 'watch':
 	if USING_GIST_AS == 'feature':
 		feature_list.extend([col for col in df.columns if 'f_gist_' in col])
 
-	target_df_indices = (~pd.isna(df['genuine'])) & (df['total_votes'] > 1)
+	target_df_indices = (~pd.isna(df['genuine']))
+	if TOTAL_VOTES_GT_1: target_df_indices = target_df_indices & (df['total_votes'] > 1)
+
 	feat_data = df.loc[target_df_indices, feature_list].to_numpy(dtype=float)
 	labels = (1 - df.loc[target_df_indices, 'genuine']).to_numpy(dtype=float)
 	tprint(f"Feature size", feat_data.shape)
@@ -118,12 +123,13 @@ elif args.data == 'watch':
 		for col in [col for col in df.columns if 'f_gist_' in col]:
 			tprint(f'Computing Relation for gist "{col[7:]}"...')
 			gist_relation = defaultdict(set)
-			rounded_distance = ((df.loc[target_df_indices, col].reset_index(drop=True)*2).round(1))/2
-			for rounded_value in rounded_distance.unique():
-				index_list = rounded_distance.index[rounded_distance==rounded_value]
-				s = set(index_list)
-				for index in index_list:
-					gist_relation[index] = s
+			related = df.loc[target_df_indices, col].reset_index(drop=True) < 0.4
+			for index in range(len(related)):
+				gist_relation[index] = set((index, ))
+			index_list = related.index[related]
+			s = set(index_list)
+			for index in index_list:
+				gist_relation[index] = s
 			relation_list.append(gist_relation)
 
 # train_test split
@@ -144,7 +150,15 @@ train_pos, train_neg = pos_neg_split(idx_train, y_train)
 
 # initialize model input
 features = nn.Embedding(feat_data.shape[0], feat_data.shape[1])
-feat_data = normalize(feat_data)
+if NORMALIZATION == 'row':
+	tprint("Normalize by row")
+	feat_data = normalize(feat_data)
+elif NORMALIZATION == 'max_column':
+	tprint("Min-max Normalization by column")
+	feat_data = np.array([(feat_data[:, i] - np.min(feat_data[:, i]))/ np.max(feat_data[:, i]) for i in range(feat_data.shape[1])]).T
+elif NORMALIZATION == 'sum_column':
+	tprint("Min-max Normalization by column")
+	feat_data = np.array([feat_data[:, i] / np.sum(feat_data[:, i]) for i in range(feat_data.shape[1])]).T
 features.weight = nn.Parameter(torch.FloatTensor(feat_data), requires_grad=False)
 if args.cuda:
 	features.cuda()
@@ -184,7 +198,7 @@ optimizer = torch.optim.Adam(filter(lambda p: p.requires_grad, gnn_model.paramet
 times = []
 performance_log = []
 
-tprint("Training Started...")
+prev_t = tprint("Training Started...")
 # train the model
 for epoch in range(args.num_epochs):
 	# randomly under-sampling negative nodes for each epoch
@@ -206,18 +220,22 @@ for epoch in range(args.num_epochs):
 		i_end = min((batch + 1) * args.batch_size, len(sampled_idx_train))
 		batch_nodes = sampled_idx_train[i_start:i_end]
 		batch_label = labels[np.array(batch_nodes)]
+		prev_t = tprint(0, prev_t=prev_t)
 		optimizer.zero_grad()
 		if args.cuda:
 			loss = gnn_model.loss(batch_nodes, Variable(torch.cuda.LongTensor(batch_label)))
 		else:
 			loss = gnn_model.loss(batch_nodes, Variable(torch.LongTensor(batch_label)))
+		prev_t = tprint(1, prev_t=prev_t)
 		loss.backward()
+		prev_t = tprint(2, prev_t=prev_t)
 		optimizer.step()
+		prev_t = tprint(3, prev_t=prev_t)
 		end_time = time.time()
 		epoch_time += end_time - start_time
 		loss += loss.item()
 
-	print(f'Epoch: {epoch}, loss: {loss.item() / num_batches}, time: {epoch_time}s')
+	tprint(f'Epoch: {epoch}, loss: {loss.item() / num_batches}, time: {epoch_time}s')
 
 	# testing the model for every $test_epoch$ epoch
 	if epoch % args.test_epochs == 0:
@@ -239,6 +257,6 @@ if PLOT:
 	axes[0].legend(loc="upper left")
 	axes[1].legend(loc="upper left")
 	plt.show()
-print(f'run on {args.data}; Dataset size {feat_data.shape}; USING_GIST_AS {USING_GIST_AS}; Random seed {args.seed}')
+print(f'run on {args.data}; Dataset size {feat_data.shape}; USING_GIST_AS {USING_GIST_AS}; Random seed {args.seed}; TOTAL_VOTES_GT_1 {TOTAL_VOTES_GT_1}; NORMALIZATION {NORMALIZATION}')
 print(*[f"{key}: {value} |" for key, value in args._get_kwargs()])
 tprint("Finished")
