@@ -213,8 +213,48 @@ def test_care(test_cases, labels, model, batch_size):
 
 	return auc_gnn, auc_label1, recall_gnn / test_batch_num, recall_label1 / test_batch_num
 
+def test_gnn(test_cases, labels, model, batch_size):
+	"""
+	Test the performance of CARE-GNN and its variants
+	:param test_cases: a list of testing node
+	:param labels: a list of testing node labels
+	:param model: the GNN model
+	:param batch_size: number nodes in a batch
+	:returns: the AUC and Recall of GNN and Simi modules
+	"""
+
+	test_batch_num = int(len(test_cases) / batch_size) + 1
+	f1_gnn = 0.0
+	acc_gnn = 0.0
+	recall_gnn = 0.0
+	gnn_list = []
+
+	for iteration in range(test_batch_num):
+		i_start = iteration * batch_size
+		i_end = min((iteration + 1) * batch_size, len(test_cases))
+		batch_nodes = test_cases[i_start:i_end]
+		batch_label = labels[i_start:i_end]
+		gnn_prob = model.to_prob(batch_nodes)
+
+		f1_gnn += f1_score(batch_label, gnn_prob.data.cpu().numpy().argmax(axis=1), average="macro")
+		acc_gnn += accuracy_score(batch_label, gnn_prob.data.cpu().numpy().argmax(axis=1))
+		recall_gnn += recall_score(batch_label, gnn_prob.data.cpu().numpy().argmax(axis=1), average="macro")
+
+		gnn_list.extend(gnn_prob.data.cpu().numpy()[:, 1].tolist())
+
+	auc_gnn = roc_auc_score(labels, np.array(gnn_list))
+	ap_gnn = average_precision_score(labels, np.array(gnn_list))
+	print(f"GNN F1\t{f1_gnn / test_batch_num:.4f}")
+	print(f"GNN Accuracy\t{acc_gnn / test_batch_num:.4f}")
+	print(f"GNN Recall\t{recall_gnn / test_batch_num:.4f}")
+	print(f"GNN auc\t{auc_gnn:.4f}")
+	print(f"GNN ap\t{ap_gnn:.4f}")
+
+	return auc_gnn, recall_gnn / test_batch_num
+
 VERBOSE = {
-	'TIME_TAKEN': True
+	'TIME_TAKEN': True,
+	'TRAIN': False
 }
 
 def tprint(*args, prev_t=None):

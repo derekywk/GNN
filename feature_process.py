@@ -13,12 +13,15 @@ from datetime import datetime
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from utils import tprint
+import json
 
 DATASET = "Watches_v1_00"
 # DATASET = "Shoes_v1_00"
 DATASET_SIZE = -1 # -1 refers to whole dataset
 DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
+KEYWORDS_SIZE = 200
+KEYWORDS_FILE_NAME = f"KEYWORD_{DATASET}_size_{DATASET_SIZE}_kw_size_{KEYWORDS_SIZE}.json"
 
 GENUINE_THRESHOLD = 0.7
 FRAUDULENT_THRESHOLD = 0.3
@@ -26,8 +29,6 @@ TOTAL_VOTES_GT_1 = False
 
 # WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{DATASET_SIZE}"
 WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{-1}"
-
-KEYWORD_LIST = ['crystal', 'solid', 'stainless', 'timer', 'power', 'atomic', 'note', 'worry', 'nicely', 'accuracy', 'mode', 'sapphire', 'stopwatch', 'reviewer', 'marker', 'tone', 'dressy', 'soft', 'shower', 'rugged', 'contrast', 'switch', 'minor', 'luminous', 'lume', 'justice', 'smooth', 'signal', 'glance', 'fully', 'durability', 'countdown', 'unlike', 'combination', 'polish', 'angle', 'relatively', 'mineral', 'substantial', 'pearl', 'readable', 'reserve', 'feminine', 'abuse', 'resin', 'depend', 'radio', 'marking', 'automatically', 'sweep']
 
 def wordnet_tag(nltk_tag):
     if nltk_tag.startswith('J'):
@@ -77,15 +78,22 @@ def common_words(df, topn=1000):
     counter = Counter(word for words in df['processed_words'] for word in words)
     return counter.most_common(topn)
 
-def important_keywords(df, ratio_threhold=10, topn=50):
-    tprint('Extracting Important Keywords...')
-    keywords = []
-    for word, count in common_words(df):
-        keyword_count, genuine_count, fraud_count, ratio = keyword_helpful_count(df, word)
-        if ratio is None or ratio > ratio_threhold:
-            keywords.append(word)
-            if len(keywords) >= topn:
-                break
+def important_keywords(df, ratio_threhold=10, topn=KEYWORDS_SIZE):
+    try:
+        with open(KEYWORDS_FILE_NAME, "r") as file:
+            keywords = json.load(file)
+        tprint('Successfully loaded Important Keywords...')
+    except:
+        tprint('Extracting Important Keywords...')
+        keywords = []
+        for word, count in common_words(df, topn*20):
+            keyword_count, genuine_count, fraud_count, ratio = keyword_helpful_count(df, word)
+            if (ratio is None or ratio > ratio_threhold) and len(word) > 2 and word.isalpha():
+                keywords.append(word)
+                if len(keywords) >= topn:
+                    break
+        with open(KEYWORDS_FILE_NAME, "w") as file:
+            json.dump(keywords, file)
     return keywords
 
 def load_dataset():
@@ -411,11 +419,11 @@ def process_review_text_features(df):
     df['f_DL_u'] = DL_u
     df['f_DL_b'] = DL_b
 
-def process_gist_features(df):
+def process_gist_features(df, keyword_list):
     word_2_vec_model = Word2Vec.load(WORD_2_VEC_MODEL_NAME)
-    keyword_vector_list = [word_2_vec_model.wv[keyword] for keyword in KEYWORD_LIST]
+    keyword_vector_list = [word_2_vec_model.wv[keyword] for keyword in keyword_list]
     word_list_indexed = df['word_list'].apply(lambda word_list: [word for word in word_list if word_2_vec_model.wv.has_index_for(word)])
-    for keyword, keyword_vector in zip(KEYWORD_LIST, keyword_vector_list):
+    for keyword, keyword_vector in zip(keyword_list, keyword_vector_list):
         tprint(f'Computing gist for {keyword}...')
         df[f"f_gist_{keyword}"] = word_list_indexed.apply(lambda word_list: np.min(word_2_vec_model.wv.distances(keyword_vector, word_list)) if len(word_list) else 1)
     tprint('Finished Gist Features')
@@ -437,11 +445,11 @@ def print_gist_features_stats(df):
             print(
                 f"distance={distance}; count={count}; "
                 f"ratio={round(genuine/fraudulent, 2) if fraudulent != 0 else 'ALL'}; "
-                f"cum_ratio={cum_ratio_list[-1] if cum_ratio_list[-1] else 'ALL'}"
+                f"cumulative_ratio={cum_ratio_list[-1] if cum_ratio_list[-1] else 'ALL'}"
             )
         print("******************************")
 
-def process_features(df):
+def process_features(df, keyword_list):
     tprint('Processing Features...')
     updated = False
     TFIDF, W = None, None
@@ -462,9 +470,9 @@ def process_features(df):
         tprint('Processing Review Behaviour Features...')
         process_review_text_features(df)
         updated = True
-    if True or not all([f"f_gist_{keyword}" in df.columns for keyword in KEYWORD_LIST]):
+    if True or not all([f"f_gist_{keyword}" in df.columns for keyword in keyword_list]):
         tprint('Processing Gist Features...')
-        process_gist_features(df)
+        process_gist_features(df, keyword_list)
         updated = True
 
     tprint('Finished all features')
@@ -477,9 +485,10 @@ def process_features(df):
 
 if __name__ == '__main__':
     df, target_df, genuine_ratio = load_dataset()
+    keyword_list = important_keywords(target_df, genuine_ratio * 3)
+    tprint("Keywords", keyword_list)
     print_gist_features_stats(df)
     # process_features(df)
-    # print(important_keywords(target_df, genuine_ratio * 3))
     # model = train_word_2_vec_model()
     # save_word_2_vec_model(model)
     tprint('end')

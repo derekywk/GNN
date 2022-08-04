@@ -16,7 +16,7 @@ import math
 """
 
 
-class InterAgg(nn.Module):
+class CareGNNInterAgg(nn.Module):
 
 	def __init__(self, features, feature_dim,
 				 embed_dim, adj_lists, intraggs,
@@ -32,7 +32,7 @@ class InterAgg(nn.Module):
 		:param step_size: the RL action step size
 		:param cuda: whether to use GPU
 		"""
-		super(InterAgg, self).__init__()
+		super(CareGNNInterAgg, self).__init__()
 
 		self.features = features
 		self.dropout = 0.6
@@ -141,7 +141,7 @@ class InterAgg(nn.Module):
 
 		# count the number of neighbors kept for aggregation for each batch node and relation
 		relation_sample_num_list = [
-			[math.ceil(len(neighs) * self.thresholds[0]) for neighs in relation_list[i]]
+			[math.ceil(len(neighs) * self.thresholds[i]) for neighs in relation_list[i]]
 			for i in range(len(to_neighs))
 		]
 		prev_t = tprint("inter f 7", prev_t=prev_t)
@@ -215,7 +215,7 @@ class InterAgg(nn.Module):
 		return combined, center_scores
 
 
-class IntraAgg(nn.Module):
+class CareGNNIntraAgg(nn.Module):
 
 	def __init__(self, features, feat_dim, cuda=False):
 		"""
@@ -224,7 +224,7 @@ class IntraAgg(nn.Module):
 		:param feat_dim: the input dimension
 		:param cuda: whether to use GPU
 		"""
-		super(IntraAgg, self).__init__()
+		super(CareGNNIntraAgg, self).__init__()
 
 		self.features = features
 		self.cuda = cuda

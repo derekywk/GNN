@@ -39,16 +39,13 @@ class GNNInterAgg(nn.Module):
 		self.intra_aggs = intraggs
 		self.embed_dim = embed_dim
 		self.feat_dim = feature_dim
-		self.inter = inter
+		self.inter = inter if inter != 'GNN' else 'Mean'
 		self.cuda = cuda
 		for intra_agg in self.intra_aggs:
 			intra_agg.cuda = cuda
 
 		# number of batches for current epoch, assigned during training
 		self.batch_num = 0
-
-		# initial filtering thresholds
-		self.thresholds = [0.5] * len(intraggs)
 
 		# the activation function used by attention mechanism
 		self.leakyrelu = nn.LeakyReLU(0.2)
@@ -65,9 +62,6 @@ class GNNInterAgg(nn.Module):
 		self.a = nn.Parameter(torch.FloatTensor(2 * self.embed_dim, 1))
 		init.xavier_uniform_(self.a)
 
-		# label predictor for similarity measure
-		self.label_clf = nn.Linear(self.feat_dim, 2)
-
 		# initialize the parameter logs
 		self.weights_log = []
 
@@ -83,45 +77,12 @@ class GNNInterAgg(nn.Module):
 		for adj_list in self.adj_lists:
 			to_neighs.append([set(adj_list[int(node)]) for node in nodes])
 
-		# find unique nodes and their neighbors used in current batch
-		unique_nodes = set.union(set(nodes), *[set.union(*to_neighs[i]) for i in range(len(to_neighs))])
-
-		# calculate label-aware scores
-		if self.cuda:
-			batch_features = self.features(torch.cuda.LongTensor(list(unique_nodes)))
-		else:
-			batch_features = self.features(torch.LongTensor(list(unique_nodes)))
-		batch_scores = self.label_clf(batch_features)
-		id_mapping = {node_id: index for node_id, index in zip(unique_nodes, range(len(unique_nodes)))}
-
-		# the label-aware scores for current batch of nodes
-		center_scores = batch_scores[itemgetter(*nodes)(id_mapping), :]
-
-		# get neighbor node id list for each batch node and relation
-		relation_list = [
-			[list(to_neigh) for to_neigh in to_neighs[i]]
-			for i in range(len(to_neighs))
-		]
-
-		# assign label-aware scores to neighbor nodes for each batch node and relation
-		relation_scores = [
-			[batch_scores[itemgetter(*to_neigh)(id_mapping), :].view(-1, 2) for to_neigh in relation_list[i]]
-			for i in range(len(to_neighs))
-		]
-
-		# count the number of neighbors kept for aggregation for each batch node and relation
-		relation_sample_num_list = [
-			[math.ceil(len(neighs) * self.thresholds[i]) for neighs in relation_list[i]]
-			for i in range(len(to_neighs))
-		]
-
 		# intra-aggregation steps for each relation
 		# Eq. (8) in the paper
 		relation_feats = []
 		for i in range(len(to_neighs)):
-			feats, scores = self.intra_aggs[i].forward(nodes, relation_list[i], center_scores, relation_scores[i], relation_sample_num_list[i])
+			feats = self.intra_aggs[i].forward(to_neighs[i])
 			relation_feats.append(feats)
-			relation_scores[i] = scores
 
 		# concat the intra-aggregated embeddings from each relation
 		neigh_feats = torch.cat(tuple(relation_feats), dim=0)
@@ -150,11 +111,8 @@ class GNNInterAgg(nn.Module):
 		elif self.inter == 'Mean':
 			# 3) CARE-Mean Inter-relation Aggregator
 			combined = mean_inter_agg(len(self.adj_lists), self_feats, neigh_feats, self.embed_dim, self.weight, n, self.cuda)
-		elif self.inter == 'GNN':
-			# 4) CARE-GNN Inter-relation Aggregator
-			combined = threshold_inter_agg(len(self.adj_lists), self_feats, neigh_feats, self.embed_dim, self.weight, self.thresholds, n, self.cuda)
 
-		return combined, center_scores
+		return combined
 
 
 class GNNIntraAgg(nn.Module):
@@ -172,20 +130,15 @@ class GNNIntraAgg(nn.Module):
 		self.cuda = cuda
 		self.feat_dim = feat_dim
 
-	def forward(self, nodes, to_neighs_list, batch_scores, neigh_scores, sample_list):
+	def forward(self, to_neighs_list):
 		"""
 		Code partially from https://github.com/williamleif/graphsage-simple/
-		:param nodes: list of nodes in a batch
 		:param to_neighs_list: neighbor node id list for each batch node in one relation
-		:param batch_scores: the label-aware scores of batch nodes
-		:param neigh_scores: the label-aware scores 1-hop neighbors each batch node in one relation
-		:param sample_list: the number of neighbors kept for each batch node in one relation
 		:return to_feats: the aggregated embeddings of batch nodes neighbors in one relation
-		:return samp_scores: the average neighbor distances for each relation after filtering
 		"""
 
 		# filer neighbors under given relation
-		samp_neighs, samp_scores = filter_neighs_ada_threshold(batch_scores, neigh_scores, to_neighs_list, sample_list)
+		samp_neighs = to_neighs_list
 
 		# find the unique nodes among batch nodes and the filtered neighbors
 		unique_nodes_list = list(set.union(*samp_neighs))
@@ -206,50 +159,7 @@ class GNNIntraAgg(nn.Module):
 			embed_matrix = self.features(torch.LongTensor(unique_nodes_list))
 		to_feats = mask.mm(embed_matrix)
 		to_feats = F.relu(to_feats)
-		return to_feats, samp_scores
-
-def filter_neighs_ada_threshold(center_scores, neigh_scores, neighs_list, sample_list):
-	"""
-	Filter neighbors according label predictor result with adaptive thresholds
-	:param center_scores: the label-aware scores of batch nodes
-	:param neigh_scores: the label-aware scores 1-hop neighbors each batch node in one relation
-	:param neighs_list: neighbor node id list for each batch node in one relation
-	:param sample_list: the number of neighbors kept for each batch node in one relation
-	:return samp_neighs: the neighbor indices and neighbor simi scores
-	:return samp_scores: the average neighbor distances for each relation after filtering
-	"""
-
-	samp_neighs = []
-	samp_scores = []
-	for idx, center_score in enumerate(center_scores):
-		center_score = center_scores[idx][0]
-		neigh_score = neigh_scores[idx][:, 0].view(-1, 1)
-		center_score = center_score.repeat(neigh_score.size()[0], 1)
-		neighs_indices = neighs_list[idx]
-		num_sample = sample_list[idx]
-
-		# compute the L1-distance of batch nodes and their neighbors
-		# Eq. (2) in paper
-		score_diff = torch.abs(center_score - neigh_score).squeeze()
-		sorted_scores, sorted_indices = torch.sort(score_diff, dim=0, descending=False)
-		selected_indices = sorted_indices.tolist()
-
-		# top-p sampling according to distance ranking and thresholds
-		# Section 3.3.1 in paper
-		if len(neigh_scores[idx]) > num_sample + 1:
-			selected_neighs = [neighs_indices[n] for n in selected_indices[:num_sample]]
-			selected_scores = sorted_scores.tolist()[:num_sample]
-		else:
-			selected_neighs = neighs_indices
-			selected_scores = score_diff.tolist()
-			if isinstance(selected_scores, float):
-				selected_scores = [selected_scores]
-
-		samp_neighs.append(set(selected_neighs))
-		samp_scores.append(selected_scores)
-
-	return samp_neighs, samp_scores
-
+		return to_feats
 
 def mean_inter_agg(num_relations, self_feats, neigh_feats, embed_dim, weight, n, cuda):
 	"""

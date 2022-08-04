@@ -30,17 +30,16 @@ class GNN(nn.Module):
 		init.xavier_uniform_(self.weight)
 
 	def forward(self, nodes):
-		embeds1, label_scores = self.inter1(nodes)
+		embeds1 = self.inter1(nodes)
 		scores = torch.mm(embeds1, self.weight)
-		return scores, label_scores
+		return scores
 
 	def to_prob(self, nodes):
-		gnn_scores, label_scores = self.forward(nodes)
+		gnn_scores = self.forward(nodes)
 		gnn_prob = nn.functional.softmax(gnn_scores, dim=1)
-		label_prob = nn.functional.softmax(label_scores, dim=1)
-		return gnn_prob, label_prob
+		return gnn_prob
 
 	def loss(self, nodes, labels):
-		gnn_scores, label_scores = self.forward(nodes)
+		gnn_scores = self.forward(nodes)
 		gnn_loss = self.xent(gnn_scores, labels.squeeze())
 		return gnn_loss
