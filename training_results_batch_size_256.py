@@ -123,6 +123,68 @@ Label1 auc	0.7633
 Label1 ap	0.4219
 """}
 ################################################
+# -1 with 48 gist features with max-column normalization ; emb-size 64
+# run on watch; Dataset size (151486, 84); USING_GIST_AS feature; Random seed 5; TOTAL_VOTES_GT_1 True; NORMALIZATION max_column
+# batch_size: 256 | cuda: True | data: watch | emb_size: 64 | inter: GNN | lambda_1: 2 | lambda_2: 0.001 |
+# lr: 0.01 | model: CARE | no_cuda: False | num_epochs: 19 | seed: 5 | step_size: 0.02 | test_epochs: 3 | under_sample: 1 |
+_ = {"""
+# 1st
+GNN F1	0.6591
+GNN Accuracy	0.7520
+GNN Recall	0.7725
+GNN auc	0.8520
+GNN ap	0.5377
+Label1 F1	0.6700
+Label1 Accuracy	0.7676
+Label1 Recall	0.7724
+Label1 auc	0.8483
+Label1 ap	0.5285
+# 2nd
+GNN F1	0.6137
+GNN Accuracy	0.6891
+GNN Recall	0.7607
+GNN auc	0.8519
+GNN ap	0.5388
+Label1 F1	0.6550
+Label1 Accuracy	0.7468
+Label1 Recall	0.7709
+Label1 auc	0.8483
+Label1 ap	0.5284
+# 3rd
+GNN F1	0.6939
+GNN Accuracy	0.8027
+GNN Recall	0.7679
+GNN auc	0.8498
+GNN ap	0.5380
+Label1 F1	0.6335
+Label1 Accuracy	0.7166
+Label1 Recall	0.7668
+Label1 auc	0.8483
+Label1 ap	0.5284
+# 4th
+GNN F1	0.6435
+GNN Accuracy	0.7296
+GNN Recall	0.7710
+GNN auc	0.8520
+GNN ap	0.5400
+Label1 F1	0.6640
+Label1 Accuracy	0.7595
+Label1 Recall	0.7715
+Label1 auc	0.8481
+Label1 ap	0.5302
+# 5th
+GNN F1	0.6934
+GNN Accuracy	0.8009
+GNN Recall	0.7704
+GNN auc	0.8508
+GNN ap	0.5375
+Label1 F1	0.6703
+Label1 Accuracy	0.7682
+Label1 Recall	0.7720
+Label1 auc	0.8485
+Label1 ap	0.5309
+"""}
+################################################
 # -1 with 48 gist features ; emb-size 128
 # run on watch; Dataset size (151486, 84); USING_GIST_AS feature; Random seed 1; TOTAL_VOTES_GT_1 True
 # batch_size: 256 | cuda: False | data: watch | emb_size: 128 | inter: GNN | lambda_1: 2 | lambda_2: 0.001
@@ -343,7 +405,7 @@ Label1 auc	0.7569
 Label1 ap	0.4113
 """}
 ################################################
-# -1 with relations (2-sided; distance threshold < 0.4) ; emb-size 64
+# -1 with relations (1-sided; distance threshold < 0.4) ; emb-size 64
 # run on watch; Dataset size (151486, 34); USING_GIST_AS relation; Random seed 1; TOTAL_VOTES_GT_1 True; NORMALIZATION row
 # batch_size: 256 | cuda: False | data: watch | emb_size: 64 | inter: GNN | lambda_1: 2 | lambda_2: 0.001 |
 # lr: 0.01 | model: CARE | no_cuda: False | num_epochs: 20 | seed: 1 | step_size: 0.02 | test_epochs: 3 | under_sample: 1 |
@@ -381,4 +443,3 @@ Label1 Recall	0.6841
 Label1 auc	0.7569
 Label1 ap	0.4121
 """}
-################################################
