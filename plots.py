@@ -88,7 +88,7 @@ def plot_models(models=model_results.keys(), title=f'Recall and AUC', save=False
     axes[1].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results))]), gnn_baseline_auc, 'Baseline', c="black", ha="right", va="bottom")
     axes[0].legend(handles=handles[0], fontsize='small', loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=len(models))
 
-    if save: plt.savefig(f"graph/fig_{title}")
+    if save: plt.savefig(f"graph/fig_{title}{'_limited' if limit_x else ''}")
 
 def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist Stats', plot_average=True, save=False):
     with open(GIST_FEATURES_STATS_FILE_NAME) as file:
@@ -157,5 +157,7 @@ plot_gist_stats(3, save=True)
 
 # for model in model_results.keys():
 #     plot_model(model, save=True)
+plot_models(save=True)
 plot_models(['A', 'B1'], save=True)
 plot_models([model for model in model_results.keys() if model.startswith('B')], save=True, limit_x=True)
+plot_models([model for model in model_results.keys() if model.startswith('B')], save=True, limit_x=False)
