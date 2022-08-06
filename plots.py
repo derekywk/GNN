@@ -155,7 +155,7 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist Stats', plot_average=Tru
 
 plot_gist_stats(3, save=True)
 
-for model in model_results.keys():
-    plot_model(model, save=True)
+# for model in model_results.keys():
+#     plot_model(model, save=True)
 plot_models(['A', 'B1'], save=True)
 plot_models([model for model in model_results.keys() if model.startswith('B')], save=True, limit_x=True)
