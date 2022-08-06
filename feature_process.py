@@ -22,6 +22,7 @@ DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
 KEYWORDS_SIZE = 200
 KEYWORDS_FILE_NAME = f"KEYWORD_{DATASET}_size_{DATASET_SIZE}_kw_size_{KEYWORDS_SIZE}.json"
+GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS.json"
 
 GENUINE_THRESHOLD = 0.7
 FRAUDULENT_THRESHOLD = 0.3
@@ -428,26 +429,45 @@ def process_gist_features(df, keyword_list):
         df[f"f_gist_{keyword}"] = word_list_indexed.apply(lambda word_list: np.min(word_2_vec_model.wv.distances(keyword_vector, word_list)) if len(word_list) else 1)
     tprint('Finished Gist Features')
 
-def print_gist_features_stats(df):
+def print_gist_features_stats(df, save=False):
     gist_columns = [col for col in df.columns if 'f_gist' in col]
+    total_population = len(df)
+    stats = []
     for i, col in enumerate(gist_columns):
         rounded = df[col].round(1)
-        tprint(f"Gist {i} out of {len(gist_columns)}", col)
-        print("mean: {:.3f}".format(df[col].mean()), "max: {:.3f}".format(df[col].max()), "min: {:.3f}".format(df[col].min()), "median: {:.3f}".format(df[col].median()))
-        distance_list, count_list = np.unique(rounded, return_counts=True)
+        tprint(f"Gist {i} out of {len(gist_columns)}", col[7:])
+        mean, max, min, median = round(df[col].mean(), 3), round(df[col].max(), 3), round(df[col].min(), 3), round(df[col].median(), 3)
+        print("mean: ", mean, "max: ", max, "min: ", max, "median: ", median)
+        distance_list, population_list = np.unique(rounded, return_counts=True)
         cum_genuine, cum_fraudulent, cum_ratio_list = 0, 0, []
-        for distance, count in zip(distance_list, count_list):
-            genuinity = df.loc[rounded == distance, 'genuine']
-            genuine, fraudulent = sum(genuinity == 1), sum((genuinity == 0))
-            cum_genuine += genuine
-            cum_fraudulent += fraudulent
+        genuinity_list = [df.loc[rounded == distance, 'genuine'] for distance in distance_list]
+        genuine_list = [sum(genuinity == 1) for genuinity in genuinity_list]
+        fraudulent_list = [sum(genuinity == 0) for genuinity in genuinity_list]
+        cumulative_genuine_list = [sum(genuine_list[:idx+1]) for idx in range(len((genuine_list)))]
+        cumulative_fraudulent_list = [sum(fraudulent_list[:idx+1]) for idx in range(len((fraudulent_list)))]
+        for distance, population, genuine, fraudulent, cum_genuine, cum_fraudulent in \
+                zip(distance_list, population_list, genuine_list, fraudulent_list, cumulative_genuine_list, cumulative_fraudulent_list):
             cum_ratio_list.append(round(cum_genuine/cum_fraudulent, 2) if cum_fraudulent != 0 else np.nan)
             print(
-                f"distance={distance}; count={count}; "
-                f"ratio={round(genuine/fraudulent, 2) if fraudulent != 0 else 'ALL'}; "
-                f"cumulative_ratio={cum_ratio_list[-1] if cum_ratio_list[-1] else 'ALL'}"
+                f"Distance={distance}; Population={population} ({round(population/total_population*100, 2)}%); "
+                f"GTFR={round(genuine/fraudulent, 2) if fraudulent != 0 else 'ALL'} "
+                f"(cumulative={cum_ratio_list[-1] if cum_ratio_list[-1] else 'ALL'})"
             )
+        stats.append({
+            'gist': col[7:],
+            'distance_list': distance_list.tolist(),
+            'population_list': population_list.tolist(),
+            'genuine_list': genuine_list,
+            'fraudulent_list': fraudulent_list,
+            'mean': mean,
+            'max': max,
+            'min': min,
+            'median': median
+        })
         print("******************************")
+    if save:
+        with open(GIST_FEATURES_STATS_FILE_NAME, "w") as file:
+            json.dump(stats, file)
 
 def process_features(df, keyword_list):
     tprint('Processing Features...')
@@ -487,7 +507,7 @@ if __name__ == '__main__':
     df, target_df, genuine_ratio = load_dataset()
     keyword_list = important_keywords(target_df, genuine_ratio * 3)
     tprint("Keywords", keyword_list)
-    print_gist_features_stats(df)
+    print_gist_features_stats(df, save=True)
     # process_features(df)
     # model = train_word_2_vec_model()
     # save_word_2_vec_model(model)
