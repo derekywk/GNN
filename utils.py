@@ -220,7 +220,7 @@ def test_gnn(test_cases, labels, model, batch_size):
 	:param labels: a list of testing node labels
 	:param model: the GNN model
 	:param batch_size: number nodes in a batch
-	:returns: the AUC and Recall of GNN and Simi modules
+	:returns: the AUC and Recall of GNN
 	"""
 
 	test_batch_num = int(len(test_cases) / batch_size) + 1
@@ -252,6 +252,38 @@ def test_gnn(test_cases, labels, model, batch_size):
 
 	return auc_gnn, recall_gnn / test_batch_num
 
+def test_rf(test_cases, labels, model):
+	"""
+	Test the performance of CARE-GNN and its variants
+	:param test_cases: a list of testing node
+	:param labels: a list of testing node labels
+	:param model: the RF model
+	:returns: the AUC and Recall of RF
+	"""
+
+	f1_rf = 0.0
+	acc_rf = 0.0
+	recall_rf = 0.0
+	rf_list = []
+
+	rf_prob = [[round(x, 2) for x in proba] for proba in model.predict_proba(test_cases)]
+
+	f1_rf += f1_score(labels, np.argmax(rf_prob, axis=1), average="macro")
+	acc_rf += accuracy_score(labels, np.argmax(rf_prob, axis=1))
+	recall_rf += recall_score(labels, np.argmax(rf_prob, axis=1), average="macro")
+
+	rf_list.extend(np.array(rf_prob)[:, 1].tolist())
+
+	auc_rf = roc_auc_score(labels, np.array(rf_list))
+	ap_rf = average_precision_score(labels, np.array(rf_list))
+	print(f"RF F1\t{f1_rf:.4f}")
+	print(f"RF Accuracy\t{acc_rf:.4f}")
+	print(f"RF Recall\t{recall_rf:.4f}")
+	print(f"RF auc\t{auc_rf:.4f}")
+	print(f"RF ap\t{ap_rf:.4f}")
+
+	return auc_rf, recall_rf
+
 VERBOSE = {
 	'TIME_TAKEN': True,
 	'TRAIN': False
@@ -265,3 +297,10 @@ def tprint(*args, prev_t=None):
 	else:
 		print(now, *args)
 	return now
+
+def is_ascii(string):
+	try:
+		string.encode('ascii')
+	except UnicodeEncodeError:
+		return False
+	return True
