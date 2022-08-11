@@ -5,14 +5,66 @@ import numpy as np
 
 GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS.json"
 base_GTFR = 3.36
-caregnn_baseline_recall = 0.74462
-caregnn_baseline_auc = 0.8237
-gnn_baseline_recall = 0.74406
-gnn_baseline_auc = 0.81654
 
-colors = ['tab:blue', 'tab:red', 'tab:green', 'tab:cyan', 'tab:pink', 'tab:brown']
+COLORS = ['tab:blue', 'tab:red', 'tab:green', 'tab:cyan', 'tab:pink', 'tab:brown']
+LINE_COLORS = ['black', 'c', 'm', 'y', 'r', 'g', 'b']
 
 model_results = {
+    'GNN_Baseline':{
+        'recall': 0.74406,
+        'auc': 0.81654,
+        'name': 'Baseline'
+    },
+    'CareGNN_Baseline':{
+        'recall': 0.74462,
+        'auc': 0.8237
+    },
+    'CareGNN_with_gist':{
+        'recall': 0.76444,
+        'auc': 0.85008
+    },
+    'RandomForest_Baseline':{
+        'recall': 0.6391,
+        'auc': 0.85874,
+        'name': 'RF Baseline'
+    },
+    'RandomForest_with_25_gist_sqrt':{
+        'recall': 0.63266,
+        'auc': 0.86476
+    },
+    'RandomForest_with_50_gist_sqrt':{
+        'recall': 0.62796,
+        'auc': 0.86332
+    },
+    'RandomForest_with_25_gist_075':{
+        'recall': 0.6496,
+        'auc': 0.86644
+    },
+    'RandomForest_with_50_gist_075':{
+        'recall': 0.64786,
+        'auc': 0.86616
+    },
+    'RandomForest_with_25_gist_only_sqrt':{
+        'recall': 0.59934,
+        'auc': 0.78842
+    },
+    'RandomForest_with_50_gist_only_sqrt':{
+        'recall': 0.59896,
+        'auc': 0.79448
+    },
+    'RandomForest_with_25_gist_only_075':{
+        'recall': 0.60242,
+        'auc': 0.78484,
+        'name': 'RF_25'
+    },
+    'RandomForest_with_50_gist_only_075':{
+        'recall': 0.60398,
+        'auc': 0.79228,
+        'name': 'RF_50'
+    }
+}
+
+model_results_vs_gist = {
     'A':{
         'x': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 112, 125, 137, 150, 162, 175, 187, 200],
         'recall': [0.75242, 0.75524, 0.7532, 0.75704, 0.75572, 0.75776, 0.75614, 0.75732, 0.75702, 0.76084, 0.75928, 0.76134, 0.76104, 0.7628, 0.76224, 0.76174, 0.76702, 0.76398, 0.76672, 0.76746, 0.7711, 0.76704, 0.77204, 0.77124, 0.77206, 0.77364, 0.7723, 0.77418, 0.77532, 0.7736, 0.77366],
@@ -45,43 +97,55 @@ model_results = {
     }
 }
 
-def plot_model(model, title=f'Recall and AUC', save=False):
+def plot_model(model, lines=['GNN_Baseline'], title=f'Recall and AUC', save=False):
     title = f'{title} (Model {model})'
-    x, recall, auc = model_results[model]['x'], model_results[model]['recall'], model_results[model]['auc']
+    x, recall, auc = model_results_vs_gist[model]['x'], model_results_vs_gist[model]['recall'], model_results_vs_gist[model]['auc']
+    label = f'Model {model}'
     plt.close('all')
 
     fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(6, 6))
-    axes[0].set_title(title)
+    handles = []
+    for idx, line in enumerate(lines):
+        handle = axes[0].axhline(model_results[line]['recall'], label=model_results[line]['name'], linestyle='--', linewidth=1, c=LINE_COLORS[idx])
+        if len(lines) > 1:
+            handles.append(handle)
+        else:
+            axes[0].text(max(x), model_results[line]['recall'], model_results[line]['name'], c=LINE_COLORS[idx], ha="right", va="bottom")
+    plot, = axes[0].plot(x, recall, label=label, c="tab:red")
+    axes[0].scatter(x, recall, label=label, s=4, c="tab:red")
+
+    handles = []
+    for idx, line in enumerate(lines):
+        handle = axes[1].axhline(model_results[line]['auc'], label=model_results[line]['name'], linestyle='--', linewidth=1, c=LINE_COLORS[idx])
+        if len(lines) > 1:
+            handles.append(handle)
+        else:
+            axes[1].text(max(x), model_results[line]['auc'], model_results[line]['name'], c=LINE_COLORS[idx], ha="right", va="bottom")
+    plot, = axes[1].plot(x, auc, label=label, c="tab:red")
+    axes[1].scatter(x, auc, label=label, s=4, c="tab:red")
+
     axes[1].set_xlabel('Number of Gist')
+    axes[0].text(max(x), min(recall), 'AUC', c="black", ha="right", va="bottom")
+    axes[1].text(max(x), min(auc), 'Recall', c="black", ha="right", va="bottom")
+    axes[0].legend(handles=[plot, *handles], fontsize='small', loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=1 + len(lines) if len(lines) > 1 else 1)
 
-    axes[0].axhline(gnn_baseline_recall, linestyle='--', linewidth=1, c="tab:blue")
-    axes[0].text(max(x), gnn_baseline_recall, 'Baseline', c="black", ha="right", va="bottom")
-    plot, = axes[0].plot(x, recall, label='Recall', c="tab:blue")
-    axes[0].scatter(x, recall, label='Recall', s=4, c="tab:blue")
-    axes[0].legend(handles=[plot])
-
-    axes[1].axhline(gnn_baseline_auc, linestyle='--', linewidth=1, c="tab:red")
-    axes[1].text(max(x), gnn_baseline_auc, 'Baseline', c="black", ha="right", va="bottom")
-    plot, = axes[1].plot(x, auc, label='AUC', c='tab:red')
-    axes[1].scatter(x, auc, label='AUC', s=4, c='tab:red')
-    axes[1].legend(handles=[plot])
 
     if save: plt.savefig(f"graph/fig_{title}")
 
-def plot_models(models=model_results.keys(), title=f'Recall and AUC', save=False, limit_x=False):
+def plot_models(models=model_results_vs_gist.keys(), lines=['GNN_Baseline'], title=f'Recall and AUC', save=False, limit_x=False, colors=COLORS):
     plt.close('all')
     fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(6, 6))
     handles = [[], []]
     title = f'{title} (Model {", ".join(models)})'
     if limit_x:
-        min_x = min(max(result['x']) for result in itemgetter(*models)(model_results))
-        index_limits = [np.argwhere(np.array(result['x']) <= min_x)[-1][0] + 1 for result in itemgetter(*models)(model_results)]
+        min_x = min(max(result['x']) for result in itemgetter(*models)(model_results_vs_gist))
+        index_limits = [np.argwhere(np.array(result['x']) <= min_x)[-1][0] + 1 for result in itemgetter(*models)(model_results_vs_gist)]
     else:
         index_limits = [None] * len(models)
 
     for idx, model in enumerate(models):
         model_name = 'Model ' + model
-        x, recall, auc = model_results[model]['x'][:index_limits[idx]], model_results[model]['recall'][:index_limits[idx]], model_results[model]['auc'][:index_limits[idx]]
+        x, recall, auc = model_results_vs_gist[model]['x'][:index_limits[idx]], model_results_vs_gist[model]['recall'][:index_limits[idx]], model_results_vs_gist[model]['auc'][:index_limits[idx]]
 
         handles[0].append(axes[0].plot(x, recall, label=model_name, c=colors[idx])[0])
         axes[0].scatter(x, recall, label=model_name, s=4, c=colors[idx])
@@ -89,13 +153,15 @@ def plot_models(models=model_results.keys(), title=f'Recall and AUC', save=False
         handles[1].append(axes[1].plot(x, auc, label=model_name, c=colors[idx])[0])
         axes[1].scatter(x, auc, label=model_name, s=4, c=colors[idx])
 
+    for idx, line in enumerate(lines):
+        axes[0].axhline(model_results[line]['recall'], linestyle='--', linewidth=1, c=LINE_COLORS[idx])
+        axes[0].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), model_results[line]['recall'], model_results[line]['name'], c=LINE_COLORS[idx], ha="right", va="bottom")
+        axes[1].axhline(model_results[line]['auc'], linestyle='--', linewidth=1, c=LINE_COLORS[idx])
+        axes[1].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), model_results[line]['auc'], model_results[line]['name'], c=LINE_COLORS[idx], ha="right", va="bottom")
+
     axes[1].set_xlabel('Number of Gist')
-    axes[0].text(0, max([max(result['recall'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results))]), 'Recall', c="black", ha="left", va="top")
-    axes[1].text(0, max([max(result['auc'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results))]), 'AUC', c="black", ha="left", va="top")
-    axes[0].axhline(gnn_baseline_recall, linestyle='--', linewidth=1, c="black")
-    axes[0].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results))]), gnn_baseline_recall, 'Baseline', c="black", ha="right", va="bottom")
-    axes[1].axhline(gnn_baseline_auc, linestyle='--', linewidth=1, c="black")
-    axes[1].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results))]), gnn_baseline_auc, 'Baseline', c="black", ha="right", va="bottom")
+    axes[0].text(0, max([max(result['recall'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), 'Recall', c="black", ha="left", va="top")
+    axes[1].text(0, max([max(result['auc'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), 'AUC', c="black", ha="left", va="top")
     axes[0].legend(handles=handles[0], fontsize='small', loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=len(models))
 
     if save: plt.savefig(f"graph/fig_{title}{'_limited' if limit_x else ''}")
@@ -165,10 +231,9 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist Stats', plot_average=Tru
 
 plot_gist_stats(3, save=True)
 
-# for model in model_results.keys():
+# for model in model_results_vs_gist.keys():
 #     plot_model(model, save=True)
-plot_models(save=True)
-plot_models(['A', 'B1', 'C'], save=True)
-plot_models(['A', 'B1', 'C', 'D'], save=True)
-plot_models([model for model in model_results.keys() if model.startswith('B')], save=True, limit_x=True)
-plot_models([model for model in model_results.keys() if model.startswith('B')], save=True, limit_x=False)
+# plot_models(save=True)
+plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
+plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
+plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])

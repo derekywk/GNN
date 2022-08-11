@@ -12,7 +12,7 @@ import gensim.downloader as api
 from datetime import datetime
 import nltk
 from sklearn.feature_extraction.text import TfidfVectorizer
-from utils import tprint
+from utils import tprint, is_ascii
 import json
 
 DATASET = "Watches_v1_00"
@@ -26,7 +26,6 @@ GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS.json"
 
 GENUINE_THRESHOLD = 0.7
 FRAUDULENT_THRESHOLD = 0.3
-TOTAL_VOTES_GT_1 = False
 
 # WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{DATASET_SIZE}"
 WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{-1}"
@@ -43,20 +42,11 @@ def wordnet_tag(nltk_tag):
     else:
         return 'n' # wordnet.NOUN
 
-# WATCH DATASET
-# Size of Dataset (960872, 15)
-# Genuine Count: 247142 (0.2572059545912463); Fraud Count: 73549 (0.07654401418711337); ratio: 3.360236033120777:1
-
-def keyword_extraction():
-    import yake
-    custom_kw_extractor = yake.KeywordExtractor(lan='en', n=2, dedupLim=0.9, top=20, features=None)
-    keywords = custom_kw_extractor.extract_keywords('\n'.join(df['review_body']))
-
 def pretrained_word_2_vec():
     model = api.load("glove-twitter-25")  # download the model and return as object ready for use
     # model = api.load("fasttext-wiki-news-subwords-300")
 
-def train_word_2_vec_model() -> Word2Vec:
+def train_word_2_vec_model(df) -> Word2Vec:
     tprint('Training Word2Vec Model...')
     return Word2Vec(df['processed_words'])
 
@@ -96,6 +86,12 @@ def important_keywords(df, ratio_threhold=10, topn=KEYWORDS_SIZE):
         with open(KEYWORDS_FILE_NAME, "w") as file:
             json.dump(keywords, file)
     return keywords
+
+def TFIDF(df):
+    from sklearn.feature_extraction.text import TfidfVectorizer
+    vectorizer = TfidfVectorizer(lowercase=False)
+    tfIdf = vectorizer.fit_transform(df['processed_words'].apply(' '.join))
+    result = pd.DataFrame(tfIdf[0].T.todense(), index=vectorizer.get_feature_names_out(), columns=["TF-IDF"]).sort_values('TF-IDF', ascending=False)
 
 def load_dataset():
     tprint('Loading Dataset...')
@@ -147,15 +143,18 @@ def load_dataset():
     tprint('Fetching Target DataFrame...')
     genuine = (df['helpful_votes'] / df['total_votes']) >= GENUINE_THRESHOLD
     fraud = (df['helpful_votes'] / df['total_votes']) <= FRAUDULENT_THRESHOLD
-    if TOTAL_VOTES_GT_1:
-        genuine = genuine & (df['total_votes'] > 1)
-        fraud = fraud & (df['total_votes'] > 1)
-    target_df = df.loc[genuine | fraud]
+    genuine_valid = genuine & (df['total_votes'] > 1)
+    fraud_valid = fraud & (df['total_votes'] > 1)
+    df_polar = df.loc[genuine | fraud]
+    df_valid = df.loc[genuine_valid | fraud_valid]
     genuine_ratio = sum(genuine) / sum(fraud)
-    tprint("Size of Dataset", df.shape)
-    tprint(f"Genuine Count: {sum(genuine)} ({sum(genuine) / len(target_df)}); Fraud Count: {sum(fraud)} ({sum(fraud) / len(target_df)}); ratio: {genuine_ratio}")
+    tprint("Shape of Dataset:", df.shape)
+    print("Whole:", len(df))
+    print("Polar:", len(df_polar))
+    print("Valid:", len(df_valid))
+    print(f"Genuine Count: {sum(genuine)} ({sum(genuine) / len(df_polar)}); Fraud Count: {sum(fraud)} ({sum(fraud) / len(df_polar)}); ratio: {genuine_ratio}")
 
-    return df, target_df, genuine_ratio
+    return df, df_polar, df_valid, genuine_ratio
 
 def normalize_column(col):
     return col/col.max()
@@ -178,7 +177,7 @@ def preprocess(col) -> pd.Series:
 def process_behaviour_features(df, type='user', TFIDF=None, W=None):
     assert type in ('user', 'product')
     id_column = 'customer_id' if type == 'user' else 'product_id'
-    
+
     BST_TAU = 28.0
     WRD_ALPHA = 1.5
     ETG_EDGES = [0, 0.5, 1, 4, 7, 13, 33]
@@ -289,7 +288,7 @@ def process_behaviour_features(df, type='user', TFIDF=None, W=None):
     df[f'f_{type}_RL'] = df[id_column].apply(lambda id: RL[id])
     df[f'f_{type}_ACS'] = df[id_column].apply(lambda id: ACS[id])
     df[f'f_{type}_MCS'] = df[id_column].apply(lambda id: MCS[id])
-    
+
     return TFIDF, W # for reuse
 
 def process_review_behaviour_features(df):
@@ -504,10 +503,12 @@ def process_features(df, keyword_list):
             tprint("Failed to save DataFrame")
 
 if __name__ == '__main__':
-    df, target_df, genuine_ratio = load_dataset()
-    keyword_list = important_keywords(target_df, genuine_ratio * 3)
+    df, df_polar, df_valid, genuine_ratio = load_dataset()
+    exit()
+    keyword_list = important_keywords(df_polar, genuine_ratio * 3)
     tprint("Keywords", keyword_list)
-    print_gist_features_stats(df, save=True)
+    process_gist_features(df, keyword_list)
+    # print_gist_features_stats(df, save=True)
     # process_features(df)
     # model = train_word_2_vec_model()
     # save_word_2_vec_model(model)

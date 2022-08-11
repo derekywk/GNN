@@ -304,3 +304,9 @@ def is_ascii(string):
 	except UnicodeEncodeError:
 		return False
 	return True
+
+def NoG(feature, relation):
+	return {
+		'Feature': feature,
+		'Relation': relation
+	}

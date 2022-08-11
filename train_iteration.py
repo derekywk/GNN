@@ -37,7 +37,10 @@ DATASET = "Watches_v1_00"
 # DATASET = "Shoes_v1_00"
 DATASET_SIZE = -1 # -1 refers to whole dataset
 USING_GIST_AS = {0: 'None', 1: 'feature', 2: 'relation', 3: 'feature and relation'}[3]
-NUMBER_OF_GIST = 50 # maximum 200
+NUMBER_OF_GIST = {
+	'Feature': 25,
+	'Relation': 10
+} # maximum 200
 TOTAL_VOTES_GT_1 = True
 DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
@@ -90,7 +93,7 @@ if 'relation' in USING_GIST_AS:
 		for index in index_list:
 			gist_relation[index] = s
 		relation_list.append(gist_relation)
-for NUMBER_OF_GIST in [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,60,70,80,90,100]:
+for NUMBER_OF_GIST in [NoG(num, num) for num in [125,150,175,200]]:
 	print(f'******************************************')
 	print(f'run on {args.data}; USING_GIST_AS {USING_GIST_AS} NUMBER_OF_GIST {NUMBER_OF_GIST}; Random seed {args.seed}')
 
@@ -100,68 +103,65 @@ for NUMBER_OF_GIST in [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,60,70,80,90,
 		relation_list = [relation1, relation2, relation3]
 		tprint(f"Feature size", feat_data.shape)
 	elif args.data == 'watch':
-		# feature_list = ['f_user_MNR',
-		# 	   'f_user_PR', 'f_user_NR', 'f_user_avgRD', 'f_user_WRD', 'f_user_BST',
-		# 	   'f_user_ERD', 'f_user_ETG', 'f_user_RL', 'f_user_ACS', 'f_user_MCS',
-		# 	   'f_product_MNR', 'f_product_PR', 'f_product_NR', 'f_product_avgRD',
-		# 	   'f_product_WRD', 'f_product_ERD', 'f_product_ETG', 'f_product_RL',
-		# 	   'f_product_ACS', 'f_product_MCS', 'f_RANK', 'f_RD', 'f_EXT', 'f_DEV',
-		# 	   'f_ETF', 'f_ISR', 'f_L', 'f_PC', 'f_PCW', 'f_PP1', 'f_RES',
-		# 	   'f_SW', 'f_OW']
+		feature_list = ['f_user_MNR',
+			   'f_user_PR', 'f_user_NR', 'f_user_avgRD', 'f_user_WRD', 'f_user_BST',
+			   'f_user_ERD', 'f_user_ETG', 'f_user_RL', 'f_user_ACS', 'f_user_MCS',
+			   'f_product_MNR', 'f_product_PR', 'f_product_NR', 'f_product_avgRD',
+			   'f_product_WRD', 'f_product_ERD', 'f_product_ETG', 'f_product_RL',
+			   'f_product_ACS', 'f_product_MCS', 'f_RANK', 'f_RD', 'f_EXT', 'f_DEV',
+			   'f_ETF', 'f_ISR', 'f_L', 'f_PC', 'f_PCW', 'f_PP1', 'f_RES',
+			   'f_SW', 'f_OW']
 		feature_list = []
 		if 'feature' in USING_GIST_AS:
-			feature_list.extend([col for col in df.columns if 'f_gist_' in col][:NUMBER_OF_GIST])
-
-		# target_df_indices = (~pd.isna(df['genuine']))
-		# if TOTAL_VOTES_GT_1: target_df_indices = target_df_indices & (df['total_votes'] > 1)
+			feature_list.extend([col for col in df.columns if 'f_gist_' in col][:NUMBER_OF_GIST['Feature']])
 
 		feat_data = df.loc[target_df_indices, feature_list].to_numpy(dtype=float)
 		labels = (1 - df.loc[target_df_indices, 'genuine']).to_numpy(dtype=float)
 		tprint(f"Feature size", feat_data.shape)
 
 		# Build Relations
-		# if VERBOSE['TRAIN']: tprint('Computing RUR...')
-		# customer_id_to_index_list = defaultdict(list)
-		# relation_RUR = defaultdict(set)
-		# for idx, customer_id in enumerate(df.loc[target_df_indices, 'customer_id'].to_list()):
-		# 	customer_id_to_index_list[customer_id].append(idx)
-		# for index_list in customer_id_to_index_list.values():
-		# 	s = set(index_list)
-		# 	for index in index_list:
-		# 		relation_RUR[index] = s
-		# if VERBOSE['TRAIN']: tprint('Computing RSR...')
-		# pisr_to_index_list = defaultdict(list)
-		# relation_RSR = defaultdict(set)
-		# for idx, (product_id, star_rating) in enumerate(df.loc[target_df_indices, ['product_id', 'star_rating']].itertuples(index=False, name=None)):
-		# 	pisr_to_index_list[(product_id, star_rating)].append(idx)
-		# for index_list in pisr_to_index_list.values():
-		# 	s = set(index_list)
-		# 	for index in index_list:
-		# 		relation_RSR[index] = s
-		# if VERBOSE['TRAIN']: tprint('Computing RTR...')
-		# piym_to_index_list = defaultdict(list)
-		# relation_RTR = defaultdict(set)
-		# for idx, (product_id, review_date) in enumerate(df.loc[target_df_indices, ['product_id', 'review_date']].itertuples(index=False, name=None)):
-		# 	piym_to_index_list[(product_id, review_date.year, review_date.month)].append(idx)
-		# for index_list in piym_to_index_list.values():
-		# 	s = set(index_list)
-		# 	for index in index_list:
-		# 		relation_RTR[index] = s
-		# relation_list = [relation_RUR, relation_RSR, relation_RTR]
-		#
-		# if 'relation' in USING_GIST_AS:
-		# 	for col in [col for col in df.columns if 'f_gist_' in col][:NUMBER_OF_GIST]:
-		# 		if VERBOSE['TRAIN']: tprint(f'Computing Relation for gist "{col[7:]}"...')
-		# 		gist_relation = defaultdict(set)
-		# 		for index in range(len(df)):
-		# 			gist_relation[index] = set((index, ))
-		#
-		# 		related = df.loc[target_df_indices, col].reset_index(drop=True) > 1.0
-		# 		index_list = related.index[related]
-		# 		s = set(index_list)
-		# 		for index in index_list:
-		# 			gist_relation[index] = s
-		# 		relation_list.append(gist_relation)
+		if VERBOSE['TRAIN']: tprint('Computing RUR...')
+		customer_id_to_index_list = defaultdict(list)
+		relation_RUR = defaultdict(set)
+		for idx, customer_id in enumerate(df.loc[target_df_indices, 'customer_id'].to_list()):
+			customer_id_to_index_list[customer_id].append(idx)
+		for index_list in customer_id_to_index_list.values():
+			s = set(index_list)
+			for index in index_list:
+				relation_RUR[index] = s
+		if VERBOSE['TRAIN']: tprint('Computing RSR...')
+		pisr_to_index_list = defaultdict(list)
+		relation_RSR = defaultdict(set)
+		for idx, (product_id, star_rating) in enumerate(df.loc[target_df_indices, ['product_id', 'star_rating']].itertuples(index=False, name=None)):
+			pisr_to_index_list[(product_id, star_rating)].append(idx)
+		for index_list in pisr_to_index_list.values():
+			s = set(index_list)
+			for index in index_list:
+				relation_RSR[index] = s
+		if VERBOSE['TRAIN']: tprint('Computing RTR...')
+		piym_to_index_list = defaultdict(list)
+		relation_RTR = defaultdict(set)
+		for idx, (product_id, review_date) in enumerate(df.loc[target_df_indices, ['product_id', 'review_date']].itertuples(index=False, name=None)):
+			piym_to_index_list[(product_id, review_date.year, review_date.month)].append(idx)
+		for index_list in piym_to_index_list.values():
+			s = set(index_list)
+			for index in index_list:
+				relation_RTR[index] = s
+		relation_list = [relation_RUR, relation_RSR, relation_RTR]
+
+		if 'relation' in USING_GIST_AS:
+			for col in [col for col in df.columns if 'f_gist_' in col][:NUMBER_OF_GIST['Relation']]:
+				if VERBOSE['TRAIN']: tprint(f'Computing Relation for gist "{col[7:]}"...')
+				gist_relation = defaultdict(set)
+				for index in range(len(df)):
+					gist_relation[index] = set((index, ))
+
+				related = df.loc[target_df_indices, col].reset_index(drop=True) > 1.0
+				index_list = related.index[related]
+				s = set(index_list)
+				for index in index_list:
+					gist_relation[index] = s
+				relation_list.append(gist_relation)
 
 	# train_test split
 	np.random.seed(args.seed)
@@ -196,7 +196,13 @@ for NUMBER_OF_GIST in [1,2,3,4,5,6,7,8,9,10,15,20,25,30,35,40,45,50,60,70,80,90,
 
 	# set input graph
 	if args.model == 'SAGE':
-		adj_lists = homo
+		if args.data == 'watch':
+			adj_lists = defaultdict(set)
+			for relation in relation_list:
+				for index, neigh_index_set in relation.items():
+					adj_lists[index].union(neigh_index_set)
+		else:
+			adj_lists = homo
 	else:
 		adj_lists = relation_list
 
