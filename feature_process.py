@@ -16,13 +16,14 @@ from utils import tprint, is_ascii
 import json
 
 DATASET = "Watches_v1_00"
-# DATASET = "Shoes_v1_00"
+DATASET = "Shoes_v1_00"
+DATASET = "Video_Games_v1_00"
 DATASET_SIZE = -1 # -1 refers to whole dataset
 DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
 KEYWORDS_SIZE = 200
 KEYWORDS_FILE_NAME = f"KEYWORD_{DATASET}_size_{DATASET_SIZE}_kw_size_{KEYWORDS_SIZE}.json"
-GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS.json"
+GIST_FEATURES_STATS_FILE_NAME = f"GIST_FEATURES_STATS_{DATASET}.json"
 
 GENUINE_THRESHOLD = 0.7
 FRAUDULENT_THRESHOLD = 0.3
@@ -504,12 +505,10 @@ def process_features(df, keyword_list):
 
 if __name__ == '__main__':
     df, df_polar, df_valid, genuine_ratio = load_dataset()
-    exit()
     keyword_list = important_keywords(df_polar, genuine_ratio * 3)
     tprint("Keywords", keyword_list)
-    process_gist_features(df, keyword_list)
     # print_gist_features_stats(df, save=True)
-    # process_features(df)
-    # model = train_word_2_vec_model()
-    # save_word_2_vec_model(model)
+    model = train_word_2_vec_model(df)
+    save_word_2_vec_model(model)
+    process_features(df, keyword_list)
     tprint('end')

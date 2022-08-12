@@ -3,7 +3,7 @@ from operator import itemgetter
 import json
 import numpy as np
 
-GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS.json"
+GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS_Watches_v1_00.json"
 base_GTFR = 3.36
 
 COLORS = ['tab:blue', 'tab:red', 'tab:green', 'tab:cyan', 'tab:pink', 'tab:brown']

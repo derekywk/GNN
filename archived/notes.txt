@@ -1,0 +1,20 @@
+DATASET = "Watches_v1_00"
+Whole: 960,872
+Polar: 320,691
+Genuine: 247,142 (77.07%)
+Fraudulent: 73,549 (22.94%)
+Valid: 151,486
+
+DATASET = "Shoes_v1_00"
+Whole: 4,366,916
+Polar: 1,175,411
+Genuine: 920,215 (78.29%)
+Fraudulent: 255,196 (21.71%)
+Valid: 498,635
+
+DATASET = "Video_Games_v1_00"
+Whole: 1,785,997
+Polar: 679,942
+Genuine: 404,987 (59.56%)
+Fraudulent: 274,955 (40.44%)
+Valid: 387,462
