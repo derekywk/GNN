@@ -55,12 +55,12 @@ model_results = {
     'RandomForest_with_25_gist_only_075':{
         'recall': 0.60242,
         'auc': 0.78484,
-        'name': 'RF_25'
+        'name': 'RF(|E|=25)'
     },
     'RandomForest_with_50_gist_only_075':{
         'recall': 0.60398,
         'auc': 0.79228,
-        'name': 'RF_50'
+        'name': 'RF(|E|=50)'
     }
 }
 
