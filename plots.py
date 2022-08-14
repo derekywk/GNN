@@ -1,10 +1,19 @@
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 from operator import itemgetter
 import json
 import numpy as np
 
-GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS_Watches_v1_00.json"
-base_GTFR = 3.36
+DATASET = {0: 'Watches', 1: 'Shoes', 2: 'Video_Games'}[2]
+if DATASET == 'Watches':
+    GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS_Watches_v1_00.json"
+    base_GTFR = 3.36 # Watches
+if DATASET == 'Shoes':
+    GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS_Shoes_v1_00.json"
+    base_GTFR = 3.61  # Shoes
+if DATASET == 'Video_Games':
+    GIST_FEATURES_STATS_FILE_NAME = "GIST_FEATURES_STATS_Video_Games_v1_00.json"
+    base_GTFR = 1.47  # Video_Games
 
 COLORS = ['tab:blue', 'tab:red', 'tab:green', 'tab:cyan', 'tab:pink', 'tab:brown']
 LINE_COLORS = ['black', 'c', 'm', 'y', 'r', 'g', 'b']
@@ -166,7 +175,7 @@ def plot_models(models=model_results_vs_gist.keys(), lines=['GNN_Baseline'], tit
 
     if save: plt.savefig(f"graph/fig_{title}{'_limited' if limit_x else ''}")
 
-def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist Stats', plot_average=True, save=False):
+def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist_Stats_{DATASET}', plot_average=True, save=False):
     with open(GIST_FEATURES_STATS_FILE_NAME) as file:
         gist_stats = json.load(file)
     plt.close('all')
@@ -178,20 +187,21 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist Stats', plot_average=Tru
     fig, left_axis = plt.subplots(figsize=(10, 5))
     right_axis = left_axis.twinx()
     total_population = sum(gist_stats[0]['population_list'])
-    left_axis.axhline(base_GTFR, linestyle='--', linewidth=1, c="black")
-    left_axis.text(MIN_DISTANCE, base_GTFR, f'Base = {base_GTFR}', c="black", ha="center", va="bottom")
+    left_axis.axhline(1, linestyle='--', linewidth=1, c="black")
+    left_axis.text(MIN_DISTANCE + 0.025, 1, f'Base GTFR = {base_GTFR}', c="black", ha="center", va="bottom")
+    legend_elements = []
 
     for idx, stats in enumerate(gist_stats[:num_of_gist_to_plot]):
-        GTFR_list = [round(genuine / (fraudulent or 1), 2)  for genuine, fraudulent in zip(stats['genuine_list'], stats['fraudulent_list'])]
+        GTFR_list = [round(genuine / (fraudulent or 1) / base_GTFR, 2)  for genuine, fraudulent in zip(stats['genuine_list'], stats['fraudulent_list'])]
         left_axis.plot(stats['distance_list'], GTFR_list, label=stats['gist'])
         left_axis.scatter(stats['distance_list'], GTFR_list, s=4, label=stats['gist'])
-        right_axis.bar(
+        legend_elements.append(right_axis.bar(
             np.array(stats['distance_list']) - DISTANCE_STEP/2 + DISTANCE_STEP/num_to_plot*idx,
             np.array(stats['population_list']) / total_population * 100,
             width=DISTANCE_STEP/num_to_plot,
             align='edge',
             label=stats['gist'], alpha=0.5
-        )
+        ))
 
     if plot_average:
         gist_distance_map = [
@@ -211,20 +221,24 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist Stats', plot_average=Tru
             avg_genuine_list.append(avg_g)
             avg_fraudulent_list.append(avg_f)
 
-        GTFR_list = [round(genuine / (fraudulent or 1), 2) for genuine, fraudulent in zip(avg_genuine_list, avg_fraudulent_list)]
+        GTFR_list = [round(genuine / (fraudulent or 1) / base_GTFR, 2) for genuine, fraudulent in zip(avg_genuine_list, avg_fraudulent_list)]
         left_axis.plot(avg_distance_list, GTFR_list, label='Average', c='black')
         left_axis.scatter(avg_distance_list, GTFR_list, s=4, label='Average', c='black')
-        right_axis.bar(
+        legend_elements.append(right_axis.bar(
             np.array(avg_distance_list) - DISTANCE_STEP / 2 + DISTANCE_STEP / num_to_plot * num_of_gist_to_plot,
             np.array(avg_population_list) / total_population * 100,
             width=DISTANCE_STEP / num_to_plot,
             align='edge',
             label='Average', alpha=0.5, color='black'
-        )
+        ))
 
-    plt.legend(fontsize='small')
+    legend_elements = [
+        plt.Line2D([0], [0], marker='o', color='black', label='GTRF'),
+        Patch(facecolor='white', edgecolor='black', label='Population')
+    ] + legend_elements
+    plt.legend(handles=legend_elements, fontsize='small')
     left_axis.set_xlabel('Gist Distance')
-    left_axis.set_ylabel('Genuine-To-Fradulent Ratio (GTFR)')
+    left_axis.set_ylabel('Relative GTFR')
     right_axis.set_ylabel('Population (%)')
 
     if save: plt.savefig(f"graph/fig_{title}")
@@ -234,6 +248,6 @@ plot_gist_stats(3, save=True)
 # for model in model_results_vs_gist.keys():
 #     plot_model(model, save=True)
 # plot_models(save=True)
-plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
-plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
-plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
+# plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
+# plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
+# plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
