@@ -35,7 +35,7 @@ model_results = {
     'RandomForest_Baseline':{
         'recall': 0.6391,
         'auc': 0.85874,
-        'name': 'RF Baseline'
+        'name': 'RF_Base'
     },
     'RandomForest_with_25_gist_sqrt':{
         'recall': 0.63266,
@@ -47,11 +47,13 @@ model_results = {
     },
     'RandomForest_with_25_gist_075':{
         'recall': 0.6496,
-        'auc': 0.86644
+        'auc': 0.86644,
+        'name': 'RF_Gist(|F_gist|=25)'
     },
     'RandomForest_with_50_gist_075':{
         'recall': 0.64786,
-        'auc': 0.86616
+        'auc': 0.86616,
+        'name': 'RF_Gist(|F_gist|=50)'
     },
     'RandomForest_with_25_gist_only_sqrt':{
         'recall': 0.59934,
@@ -64,12 +66,12 @@ model_results = {
     'RandomForest_with_25_gist_only_075':{
         'recall': 0.60242,
         'auc': 0.78484,
-        'name': 'RF(|E|=25)'
+        'name': 'RF_GistOnly(|F_gist|=25)'
     },
     'RandomForest_with_50_gist_only_075':{
         'recall': 0.60398,
         'auc': 0.79228,
-        'name': 'RF(|E|=50)'
+        'name': 'RF_GistOnly(|F_gist|=50)'
     }
 }
 
@@ -138,7 +140,7 @@ def plot_model(model, lines=['GNN_Baseline'], title=f'Recall and AUC', save=Fals
     axes[1].set_ylabel('AUC')
     # axes[0].text(max(x), min(recall), 'Recall', c="black", ha="right", va="bottom")
     # axes[1].text(max(x), min(auc), 'AUC', c="black", ha="right", va="bottom")
-    axes[0].legend(handles=[plot, *handles], fontsize='small', loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=1 + len(lines) if len(lines) > 1 else 1)
+    axes[0].legend(handles=[plot, *handles], fontsize='small', loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=min((1 + len(lines) if len(lines) > 1 else 1), 3))
 
 
     if save: plt.savefig(f"graph/fig_{title}")
@@ -250,9 +252,9 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist_Stats_{DATASET}', plot_a
 
 plot_gist_stats(3, save=True)
 
-for model in model_results_vs_gist.keys():
-    plot_model(model, save=True)
+# for model in model_results_vs_gist.keys():
+#     plot_model(model, save=True)
 plot_models(save=True)
 plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
-plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
+plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_075', 'RandomForest_with_50_gist_075', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
 plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
