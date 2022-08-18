@@ -244,6 +244,7 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist_Stats_{DATASET}', plot_a
     left_axis.set_xlabel('Gist Distance')
     left_axis.set_ylabel('Relative GTFR')
     right_axis.set_ylabel('Population (%)')
+    right_axis.set_ylim(0, 50)
 
     if save: plt.savefig(f"graph/fig_{title}")
 
