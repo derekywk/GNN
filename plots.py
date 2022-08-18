@@ -134,8 +134,10 @@ def plot_model(model, lines=['GNN_Baseline'], title=f'Recall and AUC', save=Fals
     axes[1].scatter(x, auc, label=label, s=4, c="tab:red")
 
     axes[1].set_xlabel('Number of Gist')
-    axes[0].text(max(x), min(recall), 'AUC', c="black", ha="right", va="bottom")
-    axes[1].text(max(x), min(auc), 'Recall', c="black", ha="right", va="bottom")
+    axes[0].set_ylabel('Recall')
+    axes[1].set_ylabel('AUC')
+    # axes[0].text(max(x), min(recall), 'Recall', c="black", ha="right", va="bottom")
+    # axes[1].text(max(x), min(auc), 'AUC', c="black", ha="right", va="bottom")
     axes[0].legend(handles=[plot, *handles], fontsize='small', loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=1 + len(lines) if len(lines) > 1 else 1)
 
 
@@ -169,8 +171,10 @@ def plot_models(models=model_results_vs_gist.keys(), lines=['GNN_Baseline'], tit
         axes[1].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), model_results[line]['auc'], model_results[line]['name'], c=LINE_COLORS[idx], ha="right", va="bottom")
 
     axes[1].set_xlabel('Number of Gist')
-    axes[0].text(0, max([max(result['recall'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), 'Recall', c="black", ha="left", va="top")
-    axes[1].text(0, max([max(result['auc'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), 'AUC', c="black", ha="left", va="top")
+    axes[0].set_ylabel('Recall')
+    axes[1].set_ylabel('AUC')
+    # axes[0].text(0, max([max(result['recall'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), 'Recall', c="black", ha="left", va="top")
+    # axes[1].text(0, max([max(result['auc'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), 'AUC', c="black", ha="left", va="top")
     axes[0].legend(handles=handles[0], fontsize='small', loc='lower center', bbox_to_anchor=(0.5, 1.0), ncol=len(models))
 
     if save: plt.savefig(f"graph/fig_{title}{'_limited' if limit_x else ''}")
@@ -245,9 +249,9 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist_Stats_{DATASET}', plot_a
 
 plot_gist_stats(3, save=True)
 
-# for model in model_results_vs_gist.keys():
-#     plot_model(model, save=True)
-# plot_models(save=True)
-# plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
-# plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
-# plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
+for model in model_results_vs_gist.keys():
+    plot_model(model, save=True)
+plot_models(save=True)
+plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
+plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
+plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
