@@ -16,8 +16,8 @@ from utils import tprint, is_ascii
 import json
 
 DATASET = "Watches_v1_00"
-DATASET = "Shoes_v1_00"
-DATASET = "Video_Games_v1_00"
+# DATASET = "Shoes_v1_00"
+# DATASET = "Video_Games_v1_00"
 DATASET_SIZE = -1 # -1 refers to whole dataset
 DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
 DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
@@ -436,8 +436,8 @@ def print_gist_features_stats(df, save=False):
     for i, col in enumerate(gist_columns):
         rounded = df[col].round(1)
         tprint(f"Gist {i} out of {len(gist_columns)}", col[7:])
-        mean, max, min, median = round(df[col].mean(), 3), round(df[col].max(), 3), round(df[col].min(), 3), round(df[col].median(), 3)
-        print("mean: ", mean, "max: ", max, "min: ", max, "median: ", median)
+        _mean, _max, _min, _median = round(df[col].mean(), 3), round(df[col].max(), 3), round(df[col].min(), 3), round(df[col].median(), 3)
+        print("mean: ", _mean, "max: ", _max, "min: ", _min, "median: ", _median)
         distance_list, population_list = np.unique(rounded, return_counts=True)
         cum_genuine, cum_fraudulent, cum_ratio_list = 0, 0, []
         genuinity_list = [df.loc[rounded == distance, 'genuine'] for distance in distance_list]
@@ -449,7 +449,7 @@ def print_gist_features_stats(df, save=False):
                 zip(distance_list, population_list, genuine_list, fraudulent_list, cumulative_genuine_list, cumulative_fraudulent_list):
             cum_ratio_list.append(round(cum_genuine/cum_fraudulent, 2) if cum_fraudulent != 0 else np.nan)
             print(
-                f"Distance={distance}; Population={population} ({round(population/total_population*100, 2)}%); "
+                f"Distance= ({round(max(distance-0.05, 0), 2)} - {round(distance+0.05, 2)}); Population={population} ({round(population/total_population*100, 2)}%); "
                 f"GTFR={round(genuine/fraudulent, 2) if fraudulent != 0 else 'ALL'} "
                 f"(cumulative={cum_ratio_list[-1] if cum_ratio_list[-1] else 'ALL'})"
             )
@@ -459,10 +459,10 @@ def print_gist_features_stats(df, save=False):
             'population_list': population_list.tolist(),
             'genuine_list': genuine_list,
             'fraudulent_list': fraudulent_list,
-            'mean': mean,
-            'max': max,
-            'min': min,
-            'median': median
+            'mean': _mean,
+            'max': _max,
+            'min': _min,
+            'median': _median
         })
         print("******************************")
     if save:
@@ -473,42 +473,42 @@ def process_features(df, keyword_list):
     tprint('Processing Features...')
     updated = False
     TFIDF, W = None, None
-    if not len([1 for col in df.columns if 'f_user' in col]) == 11:
-        tprint('Processing User Features...')
-        TFIDF, W = process_behaviour_features(df, type='user')
-        updated = True
-    if not len([1 for col in df.columns if 'f_product' in col]) == 10:
-        tprint('Processing Product Features...')
-        TFIDF, W = process_behaviour_features(df, type='product', TFIDF=TFIDF, W=W)
-        updated = True
-    del TFIDF, W
-    if not all([col in df.columns for col in ['f_RANK', 'f_RD', 'f_EXT', 'f_DEV', 'f_ETF', 'f_ISR']]):
-        tprint('Processing Review Behaviour Features...')
-        process_review_behaviour_features(df)
-        updated = True
-    if not all([col in df.columns for col in ['f_PCW', 'f_PC', 'f_L', 'f_PP1', 'f_RES', 'f_SW', 'f_OW', 'f_DL_u', 'f_DL_b']]):
-        tprint('Processing Review Behaviour Features...')
-        process_review_text_features(df)
-        updated = True
-    if True or not all([f"f_gist_{keyword}" in df.columns for keyword in keyword_list]):
-        tprint('Processing Gist Features...')
-        process_gist_features(df, keyword_list)
-        updated = True
-
-    tprint('Finished all features')
-    if updated:
+    def save():
         try:
             df.to_pickle(DF_FILE_NAME_WITH_FEATURES, compression={"method": "gzip", "compresslevel": 1})
             tprint("Successfully saved DataFrame")
         except:
             tprint("Failed to save DataFrame")
 
+    if not len([1 for col in df.columns if 'f_user' in col]) == 11:
+        tprint('Processing User Features...')
+        TFIDF, W = process_behaviour_features(df, type='user')
+        save()
+    if not len([1 for col in df.columns if 'f_product' in col]) == 10:
+        tprint('Processing Product Features...')
+        TFIDF, W = process_behaviour_features(df, type='product', TFIDF=TFIDF, W=W)
+        save()
+    del TFIDF, W
+    if not all([col in df.columns for col in ['f_RANK', 'f_RD', 'f_EXT', 'f_DEV', 'f_ETF', 'f_ISR']]):
+        tprint('Processing Review Behaviour Features...')
+        process_review_behaviour_features(df)
+        save()
+    if not all([col in df.columns for col in ['f_PCW', 'f_PC', 'f_L', 'f_PP1', 'f_RES', 'f_SW', 'f_OW', 'f_DL_u', 'f_DL_b']]):
+        tprint('Processing Review Text Features...')
+        process_review_text_features(df)
+        save()
+    if True or not all([f"f_gist_{keyword}" in df.columns for keyword in keyword_list]):
+        tprint('Processing Gist Features...')
+        process_gist_features(df, keyword_list)
+        save()
+    tprint('Finished all features')
+
 if __name__ == '__main__':
     df, df_polar, df_valid, genuine_ratio = load_dataset()
     keyword_list = important_keywords(df_polar, genuine_ratio * 3)
     tprint("Keywords", keyword_list)
-    # print_gist_features_stats(df, save=True)
-    model = train_word_2_vec_model(df)
-    save_word_2_vec_model(model)
-    process_features(df, keyword_list)
+    # model = train_word_2_vec_model(df)
+    # save_word_2_vec_model(model)
+    # process_features(df, keyword_list)
+    print_gist_features_stats(df, save=False)
     tprint('end')
