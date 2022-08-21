@@ -20,9 +20,19 @@ LINE_COLORS = ['black', 'c', 'm', 'y', 'r', 'g', 'b']
 
 model_results = {
     'GNN_Baseline':{
-        'recall': 0.74406,
-        'auc': 0.81654,
-        'name': 'Baseline'
+        'recall': 0.744,
+        'auc': 0.817,
+        'name': 'Baseline (Watches)'
+    },
+    'Video_Games_GNN_Baseline':{
+        'recall': 0.763,
+        'auc': 0.850,
+        'name': 'Baseline (Video Games)'
+    },
+    'Shoes_GNN_Baseline':{
+        'recall': 0.741,
+        'auc': 0.809,
+        'name': 'Baseline (Shoes)'
     },
     'CareGNN_Baseline':{
         'recall': 0.74462,
@@ -110,7 +120,19 @@ model_results_vs_gist = {
         'x': [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 15, 20, 25, 30, 35, 40, 45, 50, 60, 70, 80, 90, 100, 125, 150, 175, 200],
         'recall': [0.51634, 0.53974, 0.60966, 0.61218, 0.6197, 0.61784, 0.62416, 0.6239, 0.6505, 0.65612, 0.66392, 0.68588, 0.6834, 0.68124, 0.68248, 0.68596, 0.68716, 0.6829, 0.6952, 0.69216, 0.6946, 0.70242, 0.70158, 0.70409, 0.71536, 0.7101, 0.66436],
         'auc': [0.71388, 0.61046, 0.67328, 0.68192, 0.68976, 0.69452, 0.70298, 0.70512, 0.73304, 0.73906, 0.74428, 0.76218, 0.75976, 0.76114, 0.7598, 0.7614, 0.7635, 0.76786, 0.77094, 0.773, 0.77542, 0.7752, 0.78012, 0.785805, 0.79022, 0.79358, 0.79148],
-        'name': 'GNN_GistOnly'
+        'name': 'GNN_GistOnly (Watches)'
+    },
+    'Video_Games_D':{
+        'x': [5, 10, 20, 50, 100, 150, 200],
+        'recall': [0.6368, 0.665533333, 0.667333333, 0.672366667, 0.682933333, 0.6868, 0.694766667],
+        'auc': [0.698766667, 0.729066667, 0.738466667, 0.7411, 0.753766667, 0.762666667, 0.769366667],
+        'name': 'GNN_GistOnly (Video Games)'
+    },
+    'Shoes_D':{
+        'x': [5, 10, 20, 50, 100],
+        'recall': [0.6238, 0.6374, 0.6524, 0.662266667, 0.706666667],
+        'auc': [0.693133333, 0.7101, 0.745866667, 0.771133333, 0.7971],
+        'name': 'GNN_GistOnly (Shoes)'
     }
 }
 
@@ -152,7 +174,7 @@ def plot_model(model, lines=['GNN_Baseline'], title=f'Recall and AUC', save=Fals
 
     if save: plt.savefig(f"graph/fig_{title}")
 
-def plot_models(models=model_results_vs_gist.keys(), lines=['GNN_Baseline'], title=f'Recall and AUC', save=False, limit_x=False, colors=COLORS):
+def plot_models(models=model_results_vs_gist.keys(), lines=['GNN_Baseline'], title=f'Recall and AUC', save=False, limit_x=False, colors=COLORS, line_colors=LINE_COLORS):
     plt.close('all')
     fig, axes = plt.subplots(nrows=2, ncols=1, figsize=(6, 6))
     handles = [[], []]
@@ -174,10 +196,10 @@ def plot_models(models=model_results_vs_gist.keys(), lines=['GNN_Baseline'], tit
         axes[1].scatter(x, auc, label=model_name, s=4, c=colors[idx])
 
     for idx, line in enumerate(lines):
-        axes[0].axhline(model_results[line]['recall'], linestyle='--', linewidth=1, c=LINE_COLORS[idx])
-        axes[0].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), model_results[line]['recall'], model_results[line]['name'], c=LINE_COLORS[idx], ha="right", va="bottom")
-        axes[1].axhline(model_results[line]['auc'], linestyle='--', linewidth=1, c=LINE_COLORS[idx])
-        axes[1].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), model_results[line]['auc'], model_results[line]['name'], c=LINE_COLORS[idx], ha="right", va="bottom")
+        axes[0].axhline(model_results[line]['recall'], linestyle='--', linewidth=1, c=line_colors[idx])
+        if len(lines) == 1: axes[0].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), model_results[line]['recall'], model_results[line]['name'], c=line_colors[idx], ha="right", va="bottom")
+        axes[1].axhline(model_results[line]['auc'], linestyle='--', linewidth=1, c=line_colors[idx])
+        if len(lines) == 1: axes[1].text(max([max(result['x'][:index_limits[idx]]) for idx, result in enumerate(itemgetter(*models)(model_results_vs_gist))]), model_results[line]['auc'], model_results[line]['name'], c=line_colors[idx], ha="right", va="bottom")
 
     axes[0].set_xlabel('Number of Gist')
     axes[1].set_xlabel('Number of Gist')
@@ -258,11 +280,13 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist_Stats_{DATASET}', plot_a
 
     if save: plt.savefig(f"graph/fig_{title}")
 
-plot_gist_stats(3, save=True)
+plot_models(['D', 'Video_Games_D', 'Shoes_D'], lines=['GNN_Baseline', 'Video_Games_GNN_Baseline', 'Shoes_GNN_Baseline'], save=True, colors=LINE_COLORS)
+
+# plot_gist_stats(3, save=True)
 
 # for model in model_results_vs_gist.keys():
 #     plot_model(model, save=True)
-plot_models(save=True)
-plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
-plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_075', 'RandomForest_with_50_gist_075', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
-plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
+# plot_models(save=True)
+# plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
+# plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_075', 'RandomForest_with_50_gist_075', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
+# plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
