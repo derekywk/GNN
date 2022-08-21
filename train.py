@@ -33,28 +33,12 @@ VERBOSE['TIME_TAKEN'] = False
 VERBOSE['TRAIN'] = False
 NORMALIZATION = {0: None, 1: 'row', 2: 'max_column', 3: 'sum_column'}[2]
 PLOT = False
-DATASET = "Watches_v1_00"
-# DATASET = "Shoes_v1_00"
-DATASET_SIZE = -1 # -1 refers to whole dataset
-USING_GIST_AS = {0: 'None', 1: 'feature', 2: 'relation', 3: 'feature and relation'}[1]
-NUMBER_OF_GIST = {
-	'Feature': 50,
-	'Relation': 10
-} # maximum 200
-TOTAL_VOTES_GT_1 = True
-DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
-DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
-
-GENUINE_THRESHOLD = 0.7
-FRAUDULENT_THRESHOLD = 0.3
-
-WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{DATASET_SIZE}"
 
 parser = argparse.ArgumentParser()
 
 # dataset and model dependent args
-parser.add_argument('--data', type=str, default='watch', help='The dataset name. [yelp, amazon, watch]')
-parser.add_argument('--model', type=str, default='RF', help='The model name. [CARE, SAGE, GNN, RF]')
+parser.add_argument('--data', type=str, default='shoes', help='The dataset name. [yelp, amazon, watches, video_games, shoes]')
+parser.add_argument('--model', type=str, default='GNN', help='The model name. [CARE, SAGE, GNN, RF]')
 parser.add_argument('--inter', type=str, default='GNN', help='The inter-relation aggregator type. [Att, Weight, Mean, GNN]')
 parser.add_argument('--batch-size', type=int, default=256, help='Batch size 1024 for yelp, 256 for amazon.')
 
@@ -70,10 +54,29 @@ parser.add_argument('--step-size', type=float, default=2e-2, help='RL action ste
 
 # other args
 parser.add_argument('--no-cuda', action='store_true', default=False, help='Disables CUDA training.')
-parser.add_argument('--seed', type=int, default=5, help='Random seed.')
+parser.add_argument('--seed', type=int, default=3, help='Random seed.')
 
 args = parser.parse_args()
 args.cuda = not args.no_cuda and torch.cuda.is_available()
+
+if args.data == 'watches': DATASET = "Watches_v1_00"
+if args.data == 'shoes': DATASET = "Shoes_v1_00"
+if args.data == 'video_games': DATASET = "Video_Games_v1_00"
+DATASET_SIZE = -1 # -1 refers to whole dataset
+USING_GIST_AS = {0: 'None', 1: 'feature', 2: 'relation', 3: 'feature and relation'}[0]
+NUMBER_OF_GIST = {
+	'Feature': 50,
+	'Relation': 10
+} # maximum 200
+TOTAL_VOTES_GT_1 = True
+DF_FILE_NAME = f"df_{DATASET}_size_{DATASET_SIZE}.pkl.gz"
+DF_FILE_NAME_WITH_FEATURES = f"df_{DATASET}_size_{DATASET_SIZE}_with_features.pkl.gz"
+GIST_ONLY = False
+
+GENUINE_THRESHOLD = 0.7
+FRAUDULENT_THRESHOLD = 0.3
+
+WORD_2_VEC_MODEL_NAME = f"Word2Vec_{DATASET}_size_{DATASET_SIZE}"
 print(f'******************************************')
 print(f'run on {args.data}; USING_GIST_AS {USING_GIST_AS} NUMBER_OF_GIST {NUMBER_OF_GIST}; Random seed {args.seed}')
 
@@ -82,7 +85,7 @@ if args.data in ['amazon', 'yelp']:
 	[homo, relation1, relation2, relation3], feat_data, labels = load_data(args.data)
 	relation_list = [relation1, relation2, relation3]
 	tprint(f"Feature size", feat_data.shape)
-elif args.data == 'watch':
+elif args.data not in ['amazon', 'yelp']:
 	df = pd.read_pickle(DF_FILE_NAME_WITH_FEATURES, compression={"method": "gzip", "compresslevel": 1})
 	feature_list = ['f_user_MNR',
 		   'f_user_PR', 'f_user_NR', 'f_user_avgRD', 'f_user_WRD', 'f_user_BST',
@@ -92,7 +95,7 @@ elif args.data == 'watch':
 		   'f_product_ACS', 'f_product_MCS', 'f_RANK', 'f_RD', 'f_EXT', 'f_DEV',
 		   'f_ETF', 'f_ISR', 'f_L', 'f_PC', 'f_PCW', 'f_PP1', 'f_RES',
 		   'f_SW', 'f_OW']
-	feature_list = []
+	if GIST_ONLY: feature_list = []
 	if 'feature' in USING_GIST_AS:
 		feature_list.extend([col for col in df.columns if 'f_gist_' in col][:NUMBER_OF_GIST['Feature']])
 
@@ -179,7 +182,7 @@ if args.cuda:
 
 # set input graph
 if args.model == 'SAGE':
-	if args.data == 'watch':
+	if args.data not in ['amazon', 'yelp']:
 		adj_lists = defaultdict(set)
 		for relation in relation_list:
 			for index, neigh_index_set in relation.items():
