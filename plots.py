@@ -282,11 +282,11 @@ def plot_gist_stats(num_of_gist_to_plot=3, title=f'Gist_Stats_{DATASET}', plot_a
 
 plot_models(['D', 'Video_Games_D', 'Shoes_D'], lines=['GNN_Baseline', 'Video_Games_GNN_Baseline', 'Shoes_GNN_Baseline'], save=True, colors=LINE_COLORS)
 
-# plot_gist_stats(3, save=True)
+plot_gist_stats(3, save=True)
 
 # for model in model_results_vs_gist.keys():
 #     plot_model(model, save=True)
-# plot_models(save=True)
-# plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
-# plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_075', 'RandomForest_with_50_gist_075', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
-# plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])
+plot_models(save=True)
+plot_models(['A', 'B1', 'C'], save=True, colors=COLORS[0:3])
+plot_model('D', lines=['GNN_Baseline', 'RandomForest_Baseline', 'RandomForest_with_25_gist_075', 'RandomForest_with_50_gist_075', 'RandomForest_with_25_gist_only_075', 'RandomForest_with_50_gist_only_075'], save=True)
+plot_models([model for model in model_results_vs_gist.keys() if model.startswith('B')], save=True, limit_x=True, colors=[COLORS[1], *COLORS[3:5]])

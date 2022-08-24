@@ -37,7 +37,7 @@ PLOT = False
 parser = argparse.ArgumentParser()
 
 # dataset and model dependent args
-parser.add_argument('--data', type=str, default='shoes', help='The dataset name. [yelp, amazon, watches, video_games, shoes]')
+parser.add_argument('--data', type=str, default='watches', help='The dataset name. [yelp, amazon, watches, video_games, shoes]')
 parser.add_argument('--model', type=str, default='GNN', help='The model name. [CARE, SAGE, GNN, RF]')
 parser.add_argument('--inter', type=str, default='GNN', help='The inter-relation aggregator type. [Att, Weight, Mean, GNN]')
 parser.add_argument('--batch-size', type=int, default=256, help='Batch size 1024 for yelp, 256 for amazon.')
